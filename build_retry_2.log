@@ -1,0 +1,52 @@
+
+> baud_marathon_gym@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.5s
+  Running TypeScript ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/23) ...
+  Generating static pages using 19 workers (5/23) 
+  Generating static pages using 19 workers (11/23) 
+  Generating static pages using 19 workers (17/23) 
+✓ Generating static pages using 19 workers (23/23) in 706.4ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/assignments
+├ ƒ /admin/assignments/import
+├ ƒ /admin/questions
+├ ƒ /admin/questions/[id]
+├ ƒ /admin/questions/import
+├ ƒ /admin/questions/new
+├ ƒ /admin/stats
+├ ƒ /admin/users
+├ ƒ /admin/users/import
+├ ƒ /admin/users/new
+├ ƒ /auth/callback
+├ ƒ /dashboard
+├ ƒ /exam
+├ ƒ /exam/[sessionId]
+├ ○ /forgot-password
+├ ƒ /history
+├ ƒ /history/[sessionId]
+├ ○ /login
+├ ƒ /stats
+├ ƒ /supporter
+├ ƒ /supporter/examinees/[id]
+└ ○ /update-password
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
