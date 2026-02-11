@@ -1,0 +1,437 @@
+{
+    "version": "1.0",
+    "exportedAt": "2026-02-11T16:26:40.524Z",
+    "devices": [
+        {
+            "id": "5025edc9-6996-4da0-babf-4ab57227dac8",
+            "type": "l3-switch",
+            "name": "L3SW-JIUF",
+            "hostname": "L3SW-JIUF",
+            "model": "Catalyst 3750-X",
+            "position": {
+                "x": 440.82844574780063,
+                "y": 284.69611436950146
+            },
+            "ports": [
+                {
+                    "id": "817ffe36-1dea-4985-984f-82949b44e291",
+                    "name": "Gi1/0/1",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "723cf813-68d5-4b7e-bd38-92d16d8a6c3d",
+                    "name": "Gi1/0/2",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "971e822c-3c38-461a-8302-63b1a3f1d285",
+                    "name": "Gi1/0/3",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "d2770790-3d20-43ae-99bd-1e7a80583ef7",
+                    "name": "Gi1/0/4",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "6ae0fa46-4974-4a92-b720-79395ab56caf",
+                    "name": "Gi1/0/5",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "70c5dbab-ff58-4b93-bc8c-bc2f87dd933c",
+                    "name": "Gi1/0/6",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "a787a571-52f9-4bb8-ae4a-7cf0f256de44",
+                    "name": "Gi1/0/7",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "c1b39bd7-5f82-48c6-8586-fe5063bbafee",
+                    "name": "Gi1/0/8",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "72986418-d519-440a-885c-0867103ee3ba",
+                    "name": "Gi1/0/9",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "e4a264f1-aa25-4962-ada1-1ebf08ff206f",
+                    "name": "Gi1/0/10",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "00b399af-6765-4dd7-867f-0c2025f8659b",
+                    "name": "Gi1/0/11",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "77285526-7236-46dc-871d-f2a10289b2e8",
+                    "name": "Gi1/0/12",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "a1f2c2d4-d2d7-4d65-9308-4342a42dcaf5",
+                    "name": "Gi1/0/13",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "bc149276-f8cc-4e57-aa3c-8e2ee07faa12",
+                    "name": "Gi1/0/14",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "13e65b8e-9b24-4557-9194-e42e6785edc3",
+                    "name": "Gi1/0/15",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "e8e42ff8-f0df-440f-8674-0132b5ebe367",
+                    "name": "Gi1/0/16",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "a4fe4f42-efda-4661-9035-dac878a84bf7",
+                    "name": "Gi1/0/17",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "8c36c5be-c1bd-4ae2-917b-a23e5df43651",
+                    "name": "Gi1/0/18",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "1e85826d-4877-4438-b86b-4ea520243958",
+                    "name": "Gi1/0/19",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "9ded2a7c-ff25-4792-bfe4-2bcab9c6f03d",
+                    "name": "Gi1/0/20",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "ae3051a1-8490-45c1-8886-c5cc1be3cb02",
+                    "name": "Gi1/0/21",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "93501449-0878-4bdb-b296-59d47d94c369",
+                    "name": "Gi1/0/22",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "d2e1a0da-5693-4e25-9578-af327a28dfa2",
+                    "name": "Gi1/0/23",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                },
+                {
+                    "id": "fb64eaa9-0094-4ceb-8cc0-f24036baaffb",
+                    "name": "Gi1/0/24",
+                    "connectedTo": null,
+                    "status": "up",
+                    "vlan": 1
+                }
+            ],
+            "vlanDb": [
+                {
+                    "id": 1,
+                    "name": "default",
+                    "status": "active"
+                }
+            ],
+            "macAddressTable": [],
+            "macAddress": "64:7E:2F:D2:9B:61",
+            "stpState": {
+                "mode": "rapid-pvst",
+                "priority": 32768,
+                "portStates": {},
+                "portDetails": {}
+            },
+            "ospfConfig": {
+                "processId": 1,
+                "networks": []
+            },
+            "bgpConfig": {
+                "asNumber": 65000,
+                "neighbors": [],
+                "networks": []
+            },
+            "routingTable": [],
+            "arpTable": [],
+            "hsrpGroups": [],
+            "accessLists": [],
+            "runningConfig": [
+                "!",
+                "hostname L3SW-JIUF",
+                "!",
+                "ip routing",
+                "!"
+            ],
+            "etherChannels": [],
+            "security": {}
+        },
+        {
+            "id": "f277e759-96cd-45a3-a1aa-580409cb3f66",
+            "type": "l2-switch",
+            "name": "SW-KFD5",
+            "hostname": "SW-KFD5",
+            "model": "Catalyst 2960-X",
+            "position": {
+                "x": 517.3284457478006,
+                "y": 117.44611436950146
+            },
+            "ports": [
+                {
+                    "id": "9da10ad1-d89d-431d-969d-ce638438d1dd",
+                    "name": "Gi1/0/1",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "4d44e85e-7fd2-4548-8098-4a2c64af25a6",
+                    "name": "Gi1/0/2",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "e8892376-ea04-434c-abc6-25094b3636f6",
+                    "name": "Gi1/0/3",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "ef11d6b4-1ad5-4b0c-86f5-fd078fe82892",
+                    "name": "Gi1/0/4",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "9ab49378-bdbc-4e0a-8366-1a05ef664e68",
+                    "name": "Gi1/0/5",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "288377ee-4325-4604-8113-6ebe5dfa8d9e",
+                    "name": "Gi1/0/6",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "8cdb4d5d-6600-48ae-93b0-279415e368d0",
+                    "name": "Gi1/0/7",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "42ab5ada-e410-42bd-a2d7-b33acbb05be6",
+                    "name": "Gi1/0/8",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "b8997e80-d41a-4b6b-a3a1-35db55c6ec46",
+                    "name": "Gi1/0/9",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "cd1d57e1-757b-4c40-a17a-a7c3d5fb60f0",
+                    "name": "Gi1/0/10",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "907c4847-63ab-47e7-a206-06c440441c03",
+                    "name": "Gi1/0/11",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "21d99c44-57dd-4f9e-a6a3-34bd65fbaa1a",
+                    "name": "Gi1/0/12",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "8d595628-eaa8-4c7c-a5fe-0e2edd0f1e24",
+                    "name": "Gi1/0/13",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "c85f0062-8fb7-40fb-b264-e97c68579adf",
+                    "name": "Gi1/0/14",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "dde4cf87-2f1e-4a17-a8a9-fa11944c1db0",
+                    "name": "Gi1/0/15",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "1a1c4653-00ea-48f8-8a24-3e480f4da213",
+                    "name": "Gi1/0/16",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "c04de9fc-2e8c-4553-88ca-eb5f473cd0f0",
+                    "name": "Gi1/0/17",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "827cc4db-8873-4cdb-b2d8-7f1ff84433e3",
+                    "name": "Gi1/0/18",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "62353c32-22dd-427b-b2c6-a846299945b6",
+                    "name": "Gi1/0/19",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "00d58a10-c0df-4fa1-8c50-b84ac6a0ff1b",
+                    "name": "Gi1/0/20",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "f6b240b7-90e8-446e-897c-60aeef87ebc9",
+                    "name": "Gi1/0/21",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "94d2c616-409c-4430-8813-a3f2a5e8ba2a",
+                    "name": "Gi1/0/22",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "53650b73-7ef0-4e96-9974-db4f24088add",
+                    "name": "Gi1/0/23",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                },
+                {
+                    "id": "33225502-c273-472d-99ec-3b5372198163",
+                    "name": "Gi1/0/24",
+                    "connectedTo": null,
+                    "status": "down",
+                    "vlan": 1
+                }
+            ],
+            "vlanDb": [
+                {
+                    "id": 1,
+                    "name": "default",
+                    "status": "active"
+                }
+            ],
+            "macAddressTable": [],
+            "macAddress": "17:72:1A:C4:66:6F",
+            "stpState": {
+                "mode": "rapid-pvst",
+                "priority": 32768,
+                "portStates": {},
+                "portDetails": {}
+            },
+            "runningConfig": [
+                "!",
+                "hostname SW-KFD5",
+                "!",
+                "spanning-tree mode rapid-pvst",
+                "!"
+            ],
+            "startupConfig": [
+                "!",
+                "hostname SW-KFD5",
+                "!",
+                "spanning-tree mode rapid-pvst",
+                "!"
+            ],
+            "etherChannels": [],
+            "security": {}
+        }
+    ],
+    "connections": []
+}

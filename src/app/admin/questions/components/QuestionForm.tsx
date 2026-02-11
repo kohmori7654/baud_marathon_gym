@@ -318,7 +318,7 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
                         <CardContent>
                             <Textarea
                                 {...register('simulationTargetJson')}
-                                placeholder='{ "targetIP": "192.168.1.1", ... }'
+                                placeholder='{ "version": "1.0", "devices": [...], ... }'
                                 className="font-mono min-h-[200px] bg-slate-900 border-slate-600 text-white"
                             />
                         </CardContent>
@@ -351,7 +351,7 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
                             />
                         </CardContent>
                     </Card>
-                ) : (
+                ) : ['Single', 'Multi'].includes(questionType) ? (
                     <Card className="bg-slate-800/50 border-slate-700 md:col-span-2">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="text-white">選択肢</CardTitle>
@@ -409,7 +409,7 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
                             ))}
                         </CardContent>
                     </Card>
-                )}
+                ) : null}
             </div>
 
             {error && (
