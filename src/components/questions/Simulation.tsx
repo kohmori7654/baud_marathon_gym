@@ -22,10 +22,31 @@ export function Simulation({
     showResult,
     userAnswer
 }: SimulationProps) {
-    const fields = targetJson ? Object.keys(targetJson) : [];
+    const [parsedTarget, setParsedTarget] = useState<Record<string, string> | null>(() => {
+        if (!targetJson) return null;
+        if (typeof targetJson === 'string') {
+            try {
+                return JSON.parse(targetJson);
+            } catch {
+                console.error("Failed to parse targetJson");
+                return null;
+            }
+        }
+        return targetJson;
+    });
+
+    const fields = parsedTarget ? Object.keys(parsedTarget) : [];
+
+    // Update parsedTarget if prop changes
+    if (JSON.stringify(parsedTarget) !== JSON.stringify(targetJson) && targetJson && typeof targetJson !== 'string') {
+        // simple check to keep sync if checking from parent, though usually initial load is enough
+    }
+
     const [values, setValues] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {};
-        fields.forEach(f => initial[f] = '');
+        if (parsedTarget) {
+            Object.keys(parsedTarget).forEach(f => initial[f] = '');
+        }
         return initial;
     });
 
@@ -41,8 +62,8 @@ export function Simulation({
     const isComplete = fields.every(f => (values[f] || '').trim() !== '');
 
     const checkFieldCorrect = (field: string, value: string) => {
-        if (!targetJson) return false;
-        const targetValue = String(targetJson[field] || '');
+        if (!parsedTarget) return false;
+        const targetValue = String(parsedTarget[field] || '');
         const actualValue = String(value || '');
         return targetValue.toLowerCase().trim() === actualValue.toLowerCase().trim();
     };
@@ -62,13 +83,10 @@ export function Simulation({
                 ⚠️ シミュレーション問題はPC画面での操作を推奨します
             </div>
 
-            <div className="hidden md:block">
+            <div className="block">
                 {/* Terminal-like interface */}
                 <div className="rounded-lg overflow-hidden border border-slate-700">
-                    <div className="bg-slate-800 px-4 py-2 flex items-center gap-2 border-b border-slate-700">
-                        <Terminal className="w-4 h-4 text-emerald-500" />
-                        <span className="text-sm text-slate-400">Configuration Terminal</span>
-                    </div>
+
 
                     <div className="bg-slate-900 p-6 space-y-4">
                         {fields.map((field) => {
@@ -99,14 +117,14 @@ export function Simulation({
                                         disabled={disabled}
                                         placeholder={`Enter ${field}...`}
                                         className={cn(
-                                            'font-mono bg-slate-800 border-slate-600 text-white placeholder:text-slate-500',
+                                            'font-mono bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 caret-emerald-500',
                                             showResult && isCorrect && 'border-emerald-500 bg-emerald-500/10',
                                             showResult && isWrong && 'border-red-500 bg-red-500/10'
                                         )}
                                     />
-                                    {showResult && isWrong && targetJson && (
+                                    {showResult && isWrong && parsedTarget && (
                                         <p className="text-sm text-emerald-400">
-                                            正解: <code className="bg-slate-800 px-2 py-0.5 rounded">{targetJson[field]}</code>
+                                            正解: <code className="bg-slate-800 px-2 py-0.5 rounded">{parsedTarget[field]}</code>
                                         </p>
                                     )}
                                 </div>
@@ -115,11 +133,11 @@ export function Simulation({
                     </div>
                 </div>
 
-                {showResult && targetJson && (
+                {showResult && parsedTarget && (
                     <div className="mt-4 p-4 rounded-lg bg-slate-800/50 border border-slate-700">
                         <h4 className="text-sm font-medium text-slate-400 mb-3">正解の設定:</h4>
                         <pre className="text-sm text-emerald-400 font-mono bg-slate-900 p-4 rounded overflow-x-auto">
-                            {Object.entries(targetJson).map(([key, value]) => (
+                            {Object.entries(parsedTarget).map(([key, value]) => (
                                 `${key}: ${value}\n`
                             )).join('')}
                         </pre>
