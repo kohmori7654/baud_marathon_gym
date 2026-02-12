@@ -49,7 +49,7 @@ export default function LoginPage() {
                     </div>
                     <div>
                         <CardTitle className="text-2xl font-bold text-white">
-                            BMG - Baudroie Marathon Gym
+                            Baudroie Marathon Gym
                         </CardTitle>
                         <CardDescription className="text-slate-400 mt-2">
                             CCNA / CCNP対策

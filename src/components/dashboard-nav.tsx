@@ -49,7 +49,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
                             <BookOpen className="w-5 h-5 text-white" />
                         </div>
                         <span className="text-lg font-bold text-white hidden sm:block">
-                            BMG - Baudroie Marathon Gym
+                            Baudroie Marathon Gym
                         </span>
                     </Link>
 
