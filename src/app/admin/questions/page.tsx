@@ -30,7 +30,10 @@ export default async function QuestionsPage({
         keyword: typeof resolvedSearchParams.keyword === 'string' ? resolvedSearchParams.keyword : undefined,
     };
 
-    const { questions, totalPages, totalCount } = await getQuestions(page, limit, filters);
+    const sort = typeof resolvedSearchParams.sort === 'string' ? resolvedSearchParams.sort : 'created_at';
+    const order = typeof resolvedSearchParams.order === 'string' && (resolvedSearchParams.order === 'asc' || resolvedSearchParams.order === 'desc') ? resolvedSearchParams.order : 'desc';
+
+    const { questions, totalPages, totalCount } = await getQuestions(page, limit, filters, sort, order);
 
     // Cast to compatible type if needed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,7 +83,11 @@ export default async function QuestionsPage({
 
             <Card className="bg-slate-800/50 border-slate-700">
                 <CardContent className="p-0">
-                    <QuestionList questions={typedQuestions} />
+                    <QuestionList
+                        questions={typedQuestions}
+                        currentSort={sort}
+                        currentOrder={order}
+                    />
                 </CardContent>
             </Card>
 

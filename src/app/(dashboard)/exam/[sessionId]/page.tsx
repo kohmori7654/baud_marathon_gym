@@ -213,10 +213,10 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
             {/* Progress Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Badge variant="outline" className={
+                    <Badge className={
                         session?.exam_type === 'ENCOR'
-                            ? 'border-blue-500/50 text-blue-400'
-                            : 'border-purple-500/50 text-purple-400'
+                            ? 'bg-blue-900/50 text-blue-200 border-blue-800 hover:bg-blue-900/70'
+                            : 'bg-purple-900/50 text-purple-200 border-purple-800 hover:bg-purple-900/70'
                     }>
                         {session?.exam_type === 'ENCOR' ? 'Core ENCOR' : 'Conce ENARSI'}
                     </Badge>
@@ -261,24 +261,18 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                     {/* Question ID and other info */}
                     <div className="flex justify-between items-center mb-4">
                         <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                                <Badge variant="outline">
-                                    {currentQuestion.exam_type}
-                                </Badge>
-                                <Badge variant="secondary">
-                                    {currentQuestion.domain}
-                                </Badge>
-                                {/* Display Question ID */}
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-xl font-semibold text-white">
+                                    Question {currentIndex + 1}
+                                </h2>
+                                {/* Display Question ID prominently */}
                                 {currentQuestion.display_id && (
-                                    <Badge variant="outline" className="font-mono text-slate-400 border-slate-700">
-                                        {currentQuestion.exam_type === 'ENCOR' ? 'COR' : 'CON'}
+                                    <span className="font-mono text-lg text-slate-400 font-medium">
+                                        #{currentQuestion.exam_type === 'ENCOR' ? 'COR' : 'CON'}
                                         {currentQuestion.display_id.toString().padStart(6, '0')}
-                                    </Badge>
+                                    </span>
                                 )}
                             </div>
-                            <h2 className="text-xl font-semibold text-white">
-                                Question {currentIndex + 1}
-                            </h2>
                         </div>
                         <span className="text-sm text-slate-400">
                             {currentIndex + 1} / {questions.length}

@@ -34,7 +34,9 @@ export async function getQuestions(
         domain?: string;
         questionType?: string;
         keyword?: string;
-    }
+    },
+    sort: string = 'created_at',
+    order: 'asc' | 'desc' = 'desc'
 ) {
     const supabase = createAdminClient();
     const start = (page - 1) * limit;
@@ -66,7 +68,7 @@ export async function getQuestions(
     }
 
     const { data: questions, count, error } = await query
-        .order('created_at', { ascending: false })
+        .order(sort, { ascending: order === 'asc' })
         .range(start, end);
 
     if (error) {

@@ -397,6 +397,7 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
                                                     id={`correct-${index}`}
                                                     checked={watch(`options.${index}.isCorrect`)}
                                                     onCheckedChange={(checked) => setValue(`options.${index}.isCorrect`, checked as boolean)}
+                                                    className="border-slate-500 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
                                                 />
                                                 <Label htmlFor={`correct-${index}`} className="text-sm text-slate-300 cursor-pointer select-none">
                                                     正解

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Edit, Trash2, Loader2, Image as ImageIcon, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { deleteQuestion } from '../actions';
 import type { Question, Option, QuestionImage } from '@/types/database';
 
@@ -25,9 +25,11 @@ interface QuestionWithOptions extends Question {
 
 interface QuestionListProps {
     questions: QuestionWithOptions[];
+    currentSort?: string;
+    currentOrder?: 'asc' | 'desc';
 }
 
-export function QuestionList({ questions }: QuestionListProps) {
+export function QuestionList({ questions, currentSort = 'created_at', currentOrder = 'desc' }: QuestionListProps) {
     const router = useRouter();
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -58,14 +60,40 @@ export function QuestionList({ questions }: QuestionListProps) {
         return <Badge className={`${colors[type] || ''} border-0`}>{type}</Badge>;
     };
 
+    const SortableHeader = ({ label, field, className }: { label: string, field: string, className?: string }) => {
+        const isCurrent = currentSort === field;
+        const nextOrder = isCurrent && currentOrder === 'asc' ? 'desc' : 'asc';
+
+        // Construct new URL with sort params
+        const createSortUrl = () => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', field);
+            url.searchParams.set('order', nextOrder);
+            return url.toString();
+        };
+
+        return (
+            <TableHead className={`${className} cursor-pointer hover:bg-slate-800 transition-colors`}>
+                <Link href={createSortUrl()} scroll={false} className="flex items-center gap-1 group">
+                    {label}
+                    {isCurrent ? (
+                        currentOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-emerald-400" /> : <ArrowDown className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                        <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-slate-400" />
+                    )}
+                </Link>
+            </TableHead>
+        );
+    };
+
     return (
         <Table>
             <TableHeader>
                 <TableRow className="border-slate-700 hover:bg-transparent">
-                    <TableHead className="text-slate-400 w-24">ID</TableHead>
-                    <TableHead className="text-slate-400 w-24">試験</TableHead>
-                    <TableHead className="text-slate-400 w-32">形式</TableHead>
-                    <TableHead className="text-slate-400 w-32">分野</TableHead>
+                    <SortableHeader label="ID" field="display_id" className="text-slate-400 w-24" />
+                    <SortableHeader label="試験" field="exam_type" className="text-slate-400 w-24" />
+                    <SortableHeader label="形式" field="question_type" className="text-slate-400 w-32" />
+                    <SortableHeader label="分野" field="domain" className="text-slate-400 w-32" />
                     <TableHead className="text-slate-400">問題文</TableHead>
                     <TableHead className="text-slate-400 w-16">画像</TableHead>
                     <TableHead className="text-slate-400 w-20">選択肢</TableHead>
