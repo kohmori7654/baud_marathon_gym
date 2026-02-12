@@ -87,17 +87,17 @@ export function QuestionList({ questions, currentSort = 'created_at', currentOrd
     };
 
     return (
-        <Table>
+        <Table className="table-fixed w-full">
             <TableHeader>
                 <TableRow className="border-slate-700 hover:bg-transparent">
-                    <SortableHeader label="ID" field="display_id" className="text-slate-400 w-24" />
-                    <SortableHeader label="試験" field="exam_type" className="text-slate-400 w-24" />
-                    <SortableHeader label="形式" field="question_type" className="text-slate-400 w-32" />
-                    <SortableHeader label="分野" field="domain" className="text-slate-400 w-32" />
+                    <SortableHeader label="ID" field="display_id" className="text-slate-400 w-[110px]" />
+                    <SortableHeader label="試験" field="exam_type" className="text-slate-400 w-[80px]" />
+                    <SortableHeader label="形式" field="question_type" className="text-slate-400 w-[70px]" />
+                    <SortableHeader label="分野" field="domain" className="text-slate-400 w-[120px]" />
                     <TableHead className="text-slate-400">問題文</TableHead>
-                    <TableHead className="text-slate-400 w-16">画像</TableHead>
-                    <TableHead className="text-slate-400 w-20">選択肢</TableHead>
-                    <TableHead className="text-slate-400 w-24 text-right">操作</TableHead>
+                    <TableHead className="text-slate-400 w-[50px]">画像</TableHead>
+                    <TableHead className="text-slate-400 w-[50px]">選択肢</TableHead>
+                    <TableHead className="text-slate-400 w-[80px] text-right">操作</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -121,7 +121,7 @@ export function QuestionList({ questions, currentSort = 'created_at', currentOrd
                         <TableCell className="text-slate-300 text-sm">
                             {question.domain}
                         </TableCell>
-                        <TableCell className="text-white max-w-md truncate">
+                        <TableCell className="text-white truncate" title={question.question_text}>
                             {question.question_text}
                         </TableCell>
                         <TableCell className="text-slate-400">
