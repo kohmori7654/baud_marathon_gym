@@ -11,6 +11,8 @@ import {
 import { getQuestions } from './actions';
 import { QuestionList } from './components/QuestionList';
 import { CleanupButton } from './components/CleanupButton';
+import { ExportButton } from './components/ExportButton';
+import { QuestionFilter } from './components/QuestionFilter';
 
 export default async function QuestionsPage({
     searchParams,
@@ -21,7 +23,14 @@ export default async function QuestionsPage({
     const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
     const limit = 20;
 
-    const { questions, totalPages, totalCount } = await getQuestions(page, limit);
+    const filters = {
+        examType: typeof resolvedSearchParams.examType === 'string' ? resolvedSearchParams.examType : undefined,
+        domain: typeof resolvedSearchParams.domain === 'string' ? resolvedSearchParams.domain : undefined,
+        questionType: typeof resolvedSearchParams.questionType === 'string' ? resolvedSearchParams.questionType : undefined,
+        keyword: typeof resolvedSearchParams.keyword === 'string' ? resolvedSearchParams.keyword : undefined,
+    };
+
+    const { questions, totalPages, totalCount } = await getQuestions(page, limit, filters);
 
     // Cast to compatible type if needed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +64,7 @@ export default async function QuestionsPage({
                                 一括インポート
                             </Button>
                         </Link>
+                        <ExportButton />
                         <CleanupButton />
                         <Link href="/admin/questions/new">
                             <Button variant="ghost" className="text-slate-400 hover:text-white hover:bg-slate-800">
@@ -64,19 +74,25 @@ export default async function QuestionsPage({
                         </Link>
                     </div>
                 </div>
-
-                <Card className="bg-slate-800/50 border-slate-700">
-                    <CardContent className="p-0">
-                        <QuestionList questions={typedQuestions} />
-                    </CardContent>
-                </Card>
-
-                <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    baseUrl="/admin/questions"
-                />
             </div>
+
+            <QuestionFilter />
+
+            <Card className="bg-slate-800/50 border-slate-700">
+                <CardContent className="p-0">
+                    <QuestionList questions={typedQuestions} />
+                </CardContent>
+            </Card>
+
+            <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                baseUrl="/admin/questions"
+            // Preserve filters when paginating
+            // Note: Shadcn Pagination component might need update to support query params preservation
+            // Or we can construct query string manually if implementation allowed.
+            // Assuming basic implementation for now.
+            />
         </div>
     );
 }

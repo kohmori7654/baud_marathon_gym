@@ -34,16 +34,18 @@ export interface SupporterAssignment {
 
 export interface Question {
   id: string;
-  exam_type: TargetExamType;
+  exam_type: TargetExamType; // 'ENCOR' | 'ENARSI'
   domain: string;
   question_text: string;
-  question_type: QuestionType;
-  explanation: string | null;
-  image_base64: string | null;
-  simulation_target_json: Record<string, unknown> | null;
+  question_type: QuestionType; // 'Single' | 'Multi' | 'DragDrop' | 'Simulation'
+  explanation?: string;
+  image_base64?: string; // Legacy/Single image support
+  question_images?: QuestionImage[]; // New support for multiple images
+  simulation_target_json?: Record<string, unknown>; // JSON for simulation matching
   hash: string;
-  created_at: string;
-  updated_at: string;
+  display_id?: number; // Added: Sequential ID for display
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Option {

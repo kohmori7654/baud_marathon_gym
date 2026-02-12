@@ -20,6 +20,7 @@ import type { Question, Option, QuestionImage } from '@/types/database';
 interface QuestionWithOptions extends Question {
     options: Option[];
     question_images?: QuestionImage[];
+    formatted_id?: string; // Add formatted_id
 }
 
 interface QuestionListProps {
@@ -61,18 +62,22 @@ export function QuestionList({ questions }: QuestionListProps) {
         <Table>
             <TableHeader>
                 <TableRow className="border-slate-700 hover:bg-transparent">
+                    <TableHead className="text-slate-400 w-24">ID</TableHead>
                     <TableHead className="text-slate-400 w-24">試験</TableHead>
                     <TableHead className="text-slate-400 w-32">形式</TableHead>
-                    <TableHead className="text-slate-400 w-40">分野</TableHead>
+                    <TableHead className="text-slate-400 w-32">分野</TableHead>
                     <TableHead className="text-slate-400">問題文</TableHead>
-                    <TableHead className="text-slate-400 w-20">画像</TableHead>
-                    <TableHead className="text-slate-400 w-24">選択肢</TableHead>
+                    <TableHead className="text-slate-400 w-16">画像</TableHead>
+                    <TableHead className="text-slate-400 w-20">選択肢</TableHead>
                     <TableHead className="text-slate-400 w-24 text-right">操作</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {questions.map((question) => (
                     <TableRow key={question.id} className="border-slate-700 hover:bg-slate-800/50">
+                        <TableCell className="font-mono text-slate-300">
+                            {question.formatted_id || '-'}
+                        </TableCell>
                         <TableCell>
                             <Badge variant="outline" className={
                                 question.exam_type === 'ENCOR'
@@ -104,7 +109,7 @@ export function QuestionList({ questions }: QuestionListProps) {
                             )}
                         </TableCell>
                         <TableCell className="text-slate-400">
-                            {question.options?.length || 0}個
+                            {question.options?.length || 0}
                         </TableCell>
                         <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -132,7 +137,7 @@ export function QuestionList({ questions }: QuestionListProps) {
                 ))}
                 {questions.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                        <TableCell colSpan={8} className="text-center text-slate-500 py-8">
                             問題が見つかりません
                         </TableCell>
                     </TableRow>

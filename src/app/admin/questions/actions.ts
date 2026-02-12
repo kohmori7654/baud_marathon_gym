@@ -24,20 +24,48 @@ export interface CreateQuestionData {
 export type UpdateQuestionData = Partial<CreateQuestionData> & { id: string };
 
 /**
- * Get all questions with options
+ * Get all questions with options, filtering, and sorting
  */
-export async function getQuestions(page: number = 1, limit: number = 20) {
+export async function getQuestions(
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+        examType?: string;
+        domain?: string;
+        questionType?: string;
+        keyword?: string;
+    }
+) {
     const supabase = createAdminClient();
     const start = (page - 1) * limit;
     const end = start + limit - 1;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: questions, count, error } = await (supabase.from('questions') as any)
+    let query = (supabase.from('questions') as any)
         .select(`
             *,
             options (*),
             question_images (*)
-        `, { count: 'exact' })
+        `, { count: 'exact' });
+
+    // Apply filters
+    if (filters?.examType && filters.examType !== 'all') {
+        query = query.eq('exam_type', filters.examType);
+    }
+    if (filters?.domain && filters.domain !== 'all') {
+        query = query.eq('domain', filters.domain);
+    }
+    if (filters?.questionType && filters.questionType !== 'all') {
+        query = query.eq('question_type', filters.questionType);
+    }
+    if (filters?.keyword) {
+        // Search in question_text or explanation or display_id (if numeric)
+        // Note: casting display_id to text for search might require a different approach or RPC
+        // For now, simpler text search
+        query = query.or(`question_text.ilike.%${filters.keyword}%,explanation.ilike.%${filters.keyword}%`);
+    }
+
+    const { data: questions, count, error } = await query
         .order('created_at', { ascending: false })
         .range(start, end);
 
@@ -45,12 +73,18 @@ export async function getQuestions(page: number = 1, limit: number = 20) {
         throw new Error(`Failed to fetch questions: ${error.message}`);
     }
 
-    // Sort images? Usually not needed for list view but good practice
+    // Sort images
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     questions?.forEach((q: any) => {
         if (q.question_images) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             q.question_images.sort((a: any, b: any) => a.sort_order - b.sort_order);
+        }
+
+        // Add formatted ID
+        if (q.display_id) {
+            const prefix = q.exam_type === 'ENCOR' ? 'COR' : q.exam_type === 'ENARSI' ? 'CON' : 'UNK';
+            q.formatted_id = `${prefix}${q.display_id.toString().padStart(6, '0')}`;
         }
     });
 
@@ -59,6 +93,95 @@ export async function getQuestions(page: number = 1, limit: number = 20) {
         totalCount: count || 0,
         totalPages: Math.ceil((count || 0) / limit)
     };
+}
+
+/**
+ * Export questions to CSV based on filters
+ */
+export async function exportQuestions(
+    filters?: {
+        examType?: string;
+        domain?: string;
+        questionType?: string;
+        keyword?: string;
+    }
+) {
+    const supabase = createAdminClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query = (supabase.from('questions') as any)
+        .select(`
+            *,
+            options (*),
+            question_images (*)
+        `);
+
+    // Apply filters (same as getQuestions)
+    if (filters?.examType && filters.examType !== 'all') {
+        query = query.eq('exam_type', filters.examType);
+    }
+    if (filters?.domain && filters.domain !== 'all') {
+        query = query.eq('domain', filters.domain);
+    }
+    if (filters?.questionType && filters.questionType !== 'all') {
+        query = query.eq('question_type', filters.questionType);
+    }
+    if (filters?.keyword) {
+        query = query.or(`question_text.ilike.%${filters.keyword}%,explanation.ilike.%${filters.keyword}%`);
+    }
+
+    const { data: questions, error } = await query.order('display_id', { ascending: true }); // Sort by ID for CSV
+
+    if (error) {
+        return { error: `Failed to fetch questions for export: ${error.message}` };
+    }
+
+    if (!questions || questions.length === 0) {
+        return { error: '対象データがありません' };
+    }
+
+    // Generate CSV
+    // Header
+    const header = ['ID', '試験種別', '分野', '問題形式', '問題文', '正解肢', '画像の有無', '作成日時'];
+    const rows = questions.map((q: any) => {
+        // Format ID
+        const prefix = q.exam_type === 'ENCOR' ? 'COR' : q.exam_type === 'ENARSI' ? 'CON' : 'UNK';
+        const formattedId = q.display_id ? `${prefix}${q.display_id.toString().padStart(6, '0')}` : '';
+
+        // Format Correct Options
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const correctOptions = q.options?.filter((o: any) => o.is_correct).map((o: any) => o.text).join(' | ') || '';
+
+        // Check for images
+        const hasImages = (q.image_base64 || (q.question_images && q.question_images.length > 0)) ? 'あり' : 'なし';
+
+        // Escape CSV fields
+        const escape = (text: string | null | undefined) => {
+            if (!text) return '';
+            const stringText = String(text);
+            if (stringText.includes(',') || stringText.includes('"') || stringText.includes('\n')) {
+                return `"${stringText.replace(/"/g, '""')}"`;
+            }
+            return stringText;
+        };
+
+        return [
+            escape(formattedId),
+            escape(q.exam_type),
+            escape(q.domain),
+            escape(q.question_type),
+            escape(q.question_text),
+            escape(correctOptions),
+            escape(hasImages),
+            escape(q.created_at)
+        ].join(',');
+    });
+
+    // Add BOM for Excel compatibility (UTF-8 with BOM)
+    const bom = '\uFEFF';
+    const csvContent = bom + header.join(',') + '\n' + rows.join('\n');
+
+    return { csv: csvContent };
 }
 
 /**

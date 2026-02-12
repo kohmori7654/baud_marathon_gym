@@ -258,6 +258,33 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                 </CardHeader>
 
                 <CardContent className="space-y-6">
+                    {/* Question ID and other info */}
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline">
+                                    {currentQuestion.exam_type}
+                                </Badge>
+                                <Badge variant="secondary">
+                                    {currentQuestion.domain}
+                                </Badge>
+                                {/* Display Question ID */}
+                                {currentQuestion.display_id && (
+                                    <Badge variant="outline" className="font-mono text-slate-400 border-slate-700">
+                                        {currentQuestion.exam_type === 'ENCOR' ? 'COR' : 'CON'}
+                                        {currentQuestion.display_id.toString().padStart(6, '0')}
+                                    </Badge>
+                                )}
+                            </div>
+                            <h2 className="text-xl font-semibold text-white">
+                                Question {currentIndex + 1}
+                            </h2>
+                        </div>
+                        <span className="text-sm text-slate-400">
+                            {currentIndex + 1} / {questions.length}
+                        </span>
+                    </div>
+
                     {/* Question Images */}
                     {(currentQuestion.question_images && currentQuestion.question_images.length > 0) ? (
                         <div className="grid grid-cols-1 gap-4">
