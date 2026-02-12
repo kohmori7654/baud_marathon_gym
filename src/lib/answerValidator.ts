@@ -41,7 +41,7 @@ export function validateAnswer(
             return {
                 isCorrect: false,
                 correctAnswer: [],
-                explanation,
+                explanation: explanation || null,
             };
     }
 }
