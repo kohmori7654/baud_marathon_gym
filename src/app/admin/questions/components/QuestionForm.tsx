@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -20,7 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Trash2, GripVertical, Image as ImageIcon, FileJson, Upload, X } from 'lucide-react';
-import { createQuestion, updateQuestion } from '../actions';
+import { createQuestion, updateQuestion, getDistinctDomains } from '../actions';
 import type { Question, Option, QuestionType, TargetExamType, QuestionImage } from '@/types/database';
 
 // Import new editor
@@ -51,11 +51,17 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [domainsList, setDomainsList] = useState<string[]>([]);
     const [previewImages, setPreviewImages] = useState<string[]>(
         initialData?.question_images?.map(img => img.image_data) ||
         (initialData?.image_base64 ? [initialData.image_base64] : [])
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Load domain suggestions
+    useEffect(() => {
+        getDistinctDomains().then(setDomainsList);
+    }, []);
 
     const {
         register,
@@ -227,7 +233,12 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
 
                         <div className="space-y-2">
                             <Label className="text-slate-200">分野 (Domain)</Label>
-                            <Input {...register('domain')} placeholder="例: Layer 3 Technologies" className="bg-slate-900 border-slate-600 text-white" />
+                            <Input {...register('domain')} placeholder="例: Layer 3 Technologies" className="bg-slate-900 border-slate-600 text-white" list="domain-suggestions-form" />
+                            <datalist id="domain-suggestions-form">
+                                {domainsList.map(d => (
+                                    <option key={d} value={d} />
+                                ))}
+                            </datalist>
                             {errors.domain && <p className="text-red-400 text-xs">{errors.domain.message}</p>}
                         </div>
 

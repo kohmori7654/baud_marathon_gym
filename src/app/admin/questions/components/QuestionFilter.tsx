@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Search, X, Download, Loader2 } from 'lucide-react';
-import { exportQuestions } from '../actions';
+import { exportQuestions, getDistinctDomains } from '../actions';
 import type { TargetExamType, QuestionType } from '@/types/database';
 
 export function QuestionFilter() {
@@ -21,6 +21,12 @@ export function QuestionFilter() {
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
     const [isExporting, setIsExporting] = useState(false);
+    const [domainsList, setDomainsList] = useState<string[]>([]);
+
+    // Load distinct domains on mount
+    useEffect(() => {
+        getDistinctDomains().then(setDomainsList);
+    }, []);
 
     // Get current filters from URL
     const currentExamType = searchParams.get('examType') || 'all';
@@ -108,30 +114,22 @@ export function QuestionFilter() {
                     </Select>
                 </div>
 
-                {/* Domain */}
                 <div className="space-y-1.5 w-56">
                     <Label className="text-slate-300 text-xs">分野</Label>
-                    <Select
-                        value={currentDomain}
-                        onValueChange={(val) => updateFilter('domain', val)}
-                    >
-                        <SelectTrigger className="w-full bg-slate-900 border-slate-600 text-white">
-                            <SelectValue placeholder="分野" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                            <SelectItem value="all">全分野 (All Domains)</SelectItem>
-                            <SelectItem value="Infrastructure">Infrastructure</SelectItem>
-                            <SelectItem value="Virtualization">Virtualization</SelectItem>
-                            <SelectItem value="Architecture">Architecture</SelectItem>
-                            <SelectItem value="Security">Security</SelectItem>
-                            <SelectItem value="Automation">Automation</SelectItem>
-                            {/* Add common ENARSI domains */}
-                            <SelectItem value="レイヤ3テクノロジー">レイヤ3テクノロジー</SelectItem>
-                            <SelectItem value="VPNテクノロジー">VPNテクノロジー</SelectItem>
-                            <SelectItem value="インフラのセキュリティ">インフラのセキュリティ</SelectItem>
-                            <SelectItem value="インフラのサービス">インフラのサービス</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="relative">
+                        <Input
+                            placeholder="分野名..."
+                            value={currentDomain === 'all' ? '' : currentDomain}
+                            onChange={(e) => updateFilter('domain', e.target.value || 'all')}
+                            className="bg-slate-900 border-slate-600 text-white"
+                            list="domain-suggestions-filter"
+                        />
+                        <datalist id="domain-suggestions-filter">
+                            {domainsList.map(d => (
+                                <option key={d} value={d} />
+                            ))}
+                        </datalist>
+                    </div>
                 </div>
 
                 {/* Question Type */}

@@ -174,6 +174,11 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
                                                     {(answer.questions as any).question_text}
                                                 </p>
                                                 <div className="flex items-center gap-2 mt-2">
+                                                    {(answer.questions as any).display_id && (
+                                                        <Badge variant="outline" className="border-cyan-500/50 text-cyan-400 text-xs font-mono">
+                                                            {`${(answer.questions as any).exam_type === 'ENCOR' ? 'COR' : 'CON'}${(answer.questions as any).display_id.toString().padStart(6, '0')}`}
+                                                        </Badge>
+                                                    )}
                                                     <Badge variant="outline" className="border-slate-600 text-slate-400 text-xs">
                                                         {(answer.questions as any).domain}
                                                     </Badge>

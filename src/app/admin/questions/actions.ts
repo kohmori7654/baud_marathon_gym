@@ -234,6 +234,27 @@ export async function createQuestion(data: CreateQuestionData) {
     // Use SHA-256 for robust hashing
     const hash = crypto.createHash('sha256').update(data.questionText).digest('hex');
 
+    // Check for duplicate hash before insert
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingQuestion } = await (supabase.from('questions') as any)
+        .select('id')
+        .eq('hash', hash)
+        .single();
+
+    if (existingQuestion) {
+        return { error: '同一の問題文が既に登録されています。問題文を変更するか、既存の問題を編集してください。' };
+    }
+
+    // Calculate next display_id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: maxIdData } = await (supabase.from('questions') as any)
+        .select('display_id')
+        .order('display_id', { ascending: false })
+        .limit(1)
+        .single();
+
+    const nextDisplayId = (maxIdData?.display_id || 0) + 1;
+
     // Prepare images list
     const imagesToSave = data.images || (data.imageBase64 ? [data.imageBase64] : []);
 
@@ -246,6 +267,7 @@ export async function createQuestion(data: CreateQuestionData) {
         image_base64: imagesToSave.length > 0 ? imagesToSave[0] : null, // Legacy backward compatibility
         simulation_target_json: data.simulationTargetJson || null,
         hash: hash,
+        display_id: nextDisplayId,
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -568,4 +590,24 @@ export async function cleanupOrphanedImages() {
     } catch (e: any) {
         return { error: e.message };
     }
+}
+
+/**
+ * Get distinct domain values from questions table
+ */
+export async function getDistinctDomains(): Promise<string[]> {
+    const supabase = createAdminClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('questions') as any)
+        .select('domain')
+        .order('domain', { ascending: true });
+
+    if (error || !data) {
+        return [];
+    }
+
+    // Extract unique domains
+    const domains = [...new Set(data.map((d: { domain: string }) => d.domain).filter(Boolean))] as string[];
+    return domains;
 }
