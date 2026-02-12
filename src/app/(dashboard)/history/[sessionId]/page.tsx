@@ -38,7 +38,7 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
     // Get answers with question details
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: answers } = await (supabase.from('session_answers') as any)
-        .select('*, questions!inner(question_text, domain, question_type)')
+        .select('*, questions!inner(question_text, domain, question_type, exam_type, display_id)')
         .eq('session_id', sessionId)
         .order('answered_at', { ascending: true }) as { data: (SessionAnswer & { questions: { question_text: string; domain: string; question_type: string } })[] | null };
 

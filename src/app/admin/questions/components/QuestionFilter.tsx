@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -88,79 +89,91 @@ export function QuestionFilter() {
 
     return (
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex flex-wrap items-end gap-1.5">
                 {/* Exam Type */}
-                <Select
-                    value={currentExamType}
-                    onValueChange={(val) => updateFilter('examType', val)}
-                >
-                    <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
-                        <SelectValue placeholder="試験種別" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">全試験種別 (All Exams)</SelectItem>
-                        <SelectItem value="ENCOR">ENCOR</SelectItem>
-                        <SelectItem value="ENARSI">ENARSI</SelectItem>
-                    </SelectContent>
-                </Select>
+                <div className="space-y-1.5 w-44">
+                    <Label className="text-slate-300 text-xs">試験種別</Label>
+                    <Select
+                        value={currentExamType}
+                        onValueChange={(val) => updateFilter('examType', val)}
+                    >
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-600 text-white">
+                            <SelectValue placeholder="試験種別" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">全試験種別 (All Exams)</SelectItem>
+                            <SelectItem value="ENCOR">ENCOR</SelectItem>
+                            <SelectItem value="ENARSI">ENARSI</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
 
-                {/* Domain - Ideally fetched dynamically, but hardcoded for now or passed as prop */}
-                <Select
-                    value={currentDomain}
-                    onValueChange={(val) => updateFilter('domain', val)}
-                >
-                    <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
-                        <SelectValue placeholder="分野" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                        <SelectItem value="all">全分野 (All Domains)</SelectItem>
-                        <SelectItem value="Infrastructure">Infrastructure</SelectItem>
-                        <SelectItem value="Virtualization">Virtualization</SelectItem>
-                        <SelectItem value="Architecture">Architecture</SelectItem>
-                        <SelectItem value="Security">Security</SelectItem>
-                        <SelectItem value="Automation">Automation</SelectItem>
-                        {/* Add common ENARSI domains */}
-                        <SelectItem value="レイヤ3テクノロジー">レイヤ3テクノロジー</SelectItem>
-                        <SelectItem value="VPNテクノロジー">VPNテクノロジー</SelectItem>
-                        <SelectItem value="インフラのセキュリティ">インフラのセキュリティ</SelectItem>
-                        <SelectItem value="インフラのサービス">インフラのサービス</SelectItem>
-                    </SelectContent>
-                </Select>
+                {/* Domain */}
+                <div className="space-y-1.5 w-56">
+                    <Label className="text-slate-300 text-xs">分野</Label>
+                    <Select
+                        value={currentDomain}
+                        onValueChange={(val) => updateFilter('domain', val)}
+                    >
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-600 text-white">
+                            <SelectValue placeholder="分野" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                            <SelectItem value="all">全分野 (All Domains)</SelectItem>
+                            <SelectItem value="Infrastructure">Infrastructure</SelectItem>
+                            <SelectItem value="Virtualization">Virtualization</SelectItem>
+                            <SelectItem value="Architecture">Architecture</SelectItem>
+                            <SelectItem value="Security">Security</SelectItem>
+                            <SelectItem value="Automation">Automation</SelectItem>
+                            {/* Add common ENARSI domains */}
+                            <SelectItem value="レイヤ3テクノロジー">レイヤ3テクノロジー</SelectItem>
+                            <SelectItem value="VPNテクノロジー">VPNテクノロジー</SelectItem>
+                            <SelectItem value="インフラのセキュリティ">インフラのセキュリティ</SelectItem>
+                            <SelectItem value="インフラのサービス">インフラのサービス</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
 
                 {/* Question Type */}
-                <Select
-                    value={currentQuestionType}
-                    onValueChange={(val) => updateFilter('questionType', val)}
-                >
-                    <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
-                        <SelectValue placeholder="問題形式" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">全形式 (All Types)</SelectItem>
-                        <SelectItem value="Single">単一選択 (Single)</SelectItem>
-                        <SelectItem value="Multi">複数選択 (Multi)</SelectItem>
-                        <SelectItem value="DragDrop">ドラッグ&ドロップ (DragDrop)</SelectItem>
-                        <SelectItem value="Simulation">シミュレーション (Simulation)</SelectItem>
-                    </SelectContent>
-                </Select>
+                <div className="space-y-1.5 w-52">
+                    <Label className="text-slate-300 text-xs">問題形式</Label>
+                    <Select
+                        value={currentQuestionType}
+                        onValueChange={(val) => updateFilter('questionType', val)}
+                    >
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-600 text-white">
+                            <SelectValue placeholder="問題形式" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">全形式 (All Types)</SelectItem>
+                            <SelectItem value="Single">単一選択 (Single)</SelectItem>
+                            <SelectItem value="Multi">複数選択 (Multi)</SelectItem>
+                            <SelectItem value="DragDrop">ドラッグ&ドロップ (DragDrop)</SelectItem>
+                            <SelectItem value="Simulation">シミュレーション (Simulation)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
 
                 {/* Keyword Search */}
-                <div className="flex gap-2">
-                    <Input
-                        placeholder="ID, 問題文..."
-                        value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleKeywordSearch()}
-                        className="bg-slate-900 border-slate-600 text-white"
-                    />
-                    <Button
-                        onClick={handleKeywordSearch}
-                        disabled={isPending}
-                        variant="secondary"
-                        size="icon"
-                    >
-                        <Search className="w-4 h-4" />
-                    </Button>
+                <div className="space-y-1.5 w-64">
+                    <Label className="text-slate-300 text-xs">キーワード検索</Label>
+                    <div className="flex gap-1.5">
+                        <Input
+                            placeholder="ID, 問題文..."
+                            value={keyword}
+                            onChange={(e) => setKeyword(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleKeywordSearch()}
+                            className="bg-slate-900 border-slate-600 text-white"
+                        />
+                        <Button
+                            onClick={handleKeywordSearch}
+                            disabled={isPending}
+                            variant="secondary"
+                            size="icon"
+                        >
+                            <Search className="w-4 h-4" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
