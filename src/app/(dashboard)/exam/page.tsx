@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
 import type { TargetExamType, User } from '@/types/database';
 import { startExam } from './actions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const QUESTION_COUNTS = [5, 10, 15, 20, 30];
 
@@ -32,6 +33,7 @@ export default function ExamPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const presetMode = searchParams.get('mode');
+    const isMobile = useIsMobile();
 
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState<User | null>(null);
@@ -42,6 +44,18 @@ export default function ExamPage() {
     const [domain, setDomain] = useState<string>('all');
     const [questionType, setQuestionType] = useState<string>('all');
     const [questionCount, setQuestionCount] = useState(10);
+
+    // Mobile restrictions: Reset invalid selections if switching to mobile
+    useEffect(() => {
+        if (isMobile) {
+            if (mode === 'mock_exam') {
+                setMode('random');
+            }
+            if (questionType === 'Simulation') {
+                setQuestionType('all');
+            }
+        }
+    }, [isMobile, mode, questionType]);
 
     // Effect to handle Mock Exam defaults
     useEffect(() => {
@@ -117,6 +131,9 @@ export default function ExamPage() {
         }
     };
 
+    // Filter available modes based on mobile check
+    const availableModes = CHALLENGE_MODES.filter(m => !isMobile || m.value !== 'mock_exam');
+
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             <div>
@@ -153,7 +170,7 @@ export default function ExamPage() {
                     <div className="space-y-2">
                         <Label className="text-slate-300">出題モード</Label>
                         <div className="grid gap-2">
-                            {CHALLENGE_MODES.map((m) => (
+                            {availableModes.map((m) => (
                                 <button
                                     key={m.value}
                                     onClick={() => setMode(m.value)}
@@ -210,7 +227,7 @@ export default function ExamPage() {
                                 <SelectItem value="Single">単一選択 (Single)</SelectItem>
                                 <SelectItem value="Multi">複数選択 (Multi)</SelectItem>
                                 <SelectItem value="DragDrop">ドラッグ&ドロップ (DragDrop)</SelectItem>
-                                <SelectItem value="Simulation">シミュレーション (Simulation)</SelectItem>
+                                {!isMobile && <SelectItem value="Simulation">シミュレーション (Simulation)</SelectItem>}
                             </SelectContent>
                         </Select>
                     </div>

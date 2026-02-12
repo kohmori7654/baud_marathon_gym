@@ -264,7 +264,11 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                             {currentQuestion.question_images.sort((a, b) => a.sort_order - b.sort_order).map((img, idx) => (
                                 <div key={idx} className="rounded-lg overflow-hidden border border-slate-700 bg-slate-900 p-4">
                                     <img
-                                        src={img.image_data.startsWith('data:') ? img.image_data : `data:image/png;base64,${img.image_data}`}
+                                        src={
+                                            img.image_data.startsWith('http') ? img.image_data :
+                                                img.image_data.startsWith('data:') ? img.image_data :
+                                                    `data:image/png;base64,${img.image_data}`
+                                        }
                                         alt={`Question image ${idx + 1}`}
                                         className="max-w-full h-auto mx-auto"
                                     />
@@ -274,7 +278,11 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                     ) : currentQuestion.image_base64 && (
                         <div className="rounded-lg overflow-hidden border border-slate-700 bg-slate-900 p-4">
                             <img
-                                src={currentQuestion.image_base64.startsWith('data:') ? currentQuestion.image_base64 : `data:image/png;base64,${currentQuestion.image_base64}`}
+                                src={
+                                    currentQuestion.image_base64.startsWith('http') ? currentQuestion.image_base64 :
+                                        currentQuestion.image_base64.startsWith('data:') ? currentQuestion.image_base64 :
+                                            `data:image/png;base64,${currentQuestion.image_base64}`
+                                }
                                 alt="Question image"
                                 className="max-w-full h-auto mx-auto"
                             />

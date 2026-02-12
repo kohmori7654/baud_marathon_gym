@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { login, signup } from '../actions';
 
 export default function LoginPage() {
@@ -49,7 +49,7 @@ export default function LoginPage() {
                     </div>
                     <div>
                         <CardTitle className="text-2xl font-bold text-white">
-                            Baudroie Marathon Gym
+                            BMG - Baudroie Marathon Gym
                         </CardTitle>
                         <CardDescription className="text-slate-400 mt-2">
                             CCNA / CCNP対策
@@ -61,7 +61,7 @@ export default function LoginPage() {
                     <CardContent className="space-y-4">
                         {error && (
                             <Alert variant="destructive" className="bg-red-900/20 border-red-800 text-red-300">
-                                {error}
+                                <AlertDescription>{error}</AlertDescription>
                             </Alert>
                         )}
 

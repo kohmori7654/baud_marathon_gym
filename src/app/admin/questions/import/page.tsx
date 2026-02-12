@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -20,9 +21,11 @@ import {
     FileJson,
     Loader2,
     CheckCircle,
-    XCircle
+    XCircle,
+    Image as ImageIcon
 } from 'lucide-react';
 import { bulkUpsertQuestions } from '@/app/admin/questions/actions';
+import { createClient } from '@/lib/supabase/client';
 
 interface ImportResult {
     hash: string;
@@ -107,6 +110,8 @@ export default function ImportPage() {
     const [error, setError] = useState<string | null>(null);
     const [results, setResults] = useState<ImportResult[] | null>(null);
     const [sampleType, setSampleType] = useState<keyof typeof SAMPLE_TEMPLATES>('Single');
+    const [selectedImages, setSelectedImages] = useState<File[]>([]);
+    const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -122,8 +127,44 @@ export default function ImportPage() {
         reader.readAsText(file);
     };
 
-    const normalizeQuestion = (q: any): any => {
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setSelectedImages(Array.from(e.target.files));
+        }
+    };
+
+    const normalizeQuestion = (q: any, uploadedImageMap: { [key: string]: string }): any => {
         // Map snake_case to camelCase
+
+        // Resolve image URL
+        // 1. Check if image_filename matches an uploaded file
+        // 2. Check if image_base64 is actually a filename that matches
+        // 3. Fallback to existing logic
+
+        let imageUrls: string[] = [];
+
+        // Try to find matching images in the uploaded map
+        if (q.image_filename && uploadedImageMap[q.image_filename]) {
+            imageUrls.push(uploadedImageMap[q.image_filename]);
+        }
+
+        // Also check images array for filenames
+        if (Array.isArray(q.images)) {
+            q.images.forEach((img: string) => {
+                if (uploadedImageMap[img]) {
+                    imageUrls.push(uploadedImageMap[img]);
+                } else {
+                    // Keep existing (might be URL or Base64)
+                    imageUrls.push(img);
+                }
+            });
+        }
+
+        // Compat: Check image_base64 as filename
+        if (q.image_base64 && uploadedImageMap[q.image_base64]) {
+            if (imageUrls.length === 0) imageUrls.push(uploadedImageMap[q.image_base64]);
+        }
+
         const normalized = {
             examType: q.examType || q.exam_type,
             domain: q.domain,
@@ -132,8 +173,8 @@ export default function ImportPage() {
             explanation: q.explanation,
             // image_filename is commonly used in exports, map to imageBase64 if it's actually base64
             // Also support images array
-            imageBase64: q.imageBase64 || q.image_base64,
-            images: q.images || (q.image_base64 ? [q.image_base64] : undefined),
+            imageBase64: imageUrls.length > 0 ? imageUrls[0] : (q.imageBase64 || q.image_base64),
+            images: imageUrls.length > 0 ? imageUrls : (q.images || (q.image_base64 ? [q.image_base64] : undefined)),
             simulationTargetJson: q.simulationTargetJson || q.simulation_target_json,
             options: Array.isArray(q.options) ? q.options.map((opt: any, index: number) => ({
                 text: opt.text,
@@ -167,8 +208,48 @@ export default function ImportPage() {
             setIsLoading(true);
             setError(null);
 
-            // Normalize data
-            const normalizedQuestions = questions.map(normalizeQuestion);
+            setError(null);
+
+            // Upload images first
+            const uploadedImageMap: { [key: string]: string } = {};
+
+            if (selectedImages.length > 0) {
+                const supabase = createClient();
+
+                for (const file of selectedImages) {
+                    try {
+                        // Generate unique filename to avoid collision but keep recognizable
+                        const timestamp = new Date().getTime();
+                        const uniqueFilename = `${timestamp}-${file.name}`;
+
+                        const { data: uploadData, error: uploadError } = await supabase
+                            .storage
+                            .from('question-images')
+                            .upload(uniqueFilename, file, {
+                                cacheControl: '3600',
+                                upsert: false
+                            });
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase
+                            .storage
+                            .from('question-images')
+                            .getPublicUrl(uniqueFilename);
+
+                        uploadedImageMap[file.name] = publicUrl;
+
+                    } catch (e: any) {
+                        console.error(`Failed to upload ${file.name}:`, e);
+                        // Continue with other images? Or stop? 
+                        // For now we assume typical failure means config error, so maybe strict is better, 
+                        // but partial success is also useful. Let's warn but continue.
+                    }
+                }
+            }
+
+            // Normalize data with image map
+            const normalizedQuestions = questions.map(q => normalizeQuestion(q, uploadedImageMap));
 
             const result = await bulkUpsertQuestions({ questions: normalizedQuestions });
             setResults(result.results);
@@ -233,6 +314,54 @@ export default function ImportPage() {
                                     className="hidden"
                                 />
                             </label>
+                        </div>
+
+
+
+                        {/* Image Upload Area */}
+                        <div>
+                            <div className="mb-2">
+                                <Label className="text-white mb-1 block">画像ファイル (任意: JSON内のファイル名と紐付けます)</Label>
+                                <p className="text-xs text-slate-400 mb-2">
+                                    JSON内の <code>image_filename</code> や <code>images</code> 配列で指定したファイル名と一致する画像を選択してください。
+                                </p>
+                            </div>
+                            <label className="block">
+                                <div className="flex items-center justify-center w-full h-20 border border-slate-600 rounded-lg hover:border-slate-500 transition-colors cursor-pointer bg-slate-900/30">
+                                    <div className="flex items-center gap-2">
+                                        <ImageIcon className="w-5 h-5 text-slate-400" />
+                                        <p className="text-sm text-slate-400">
+                                            {selectedImages.length > 0
+                                                ? `${selectedImages.length} 個のファイルを選択中`
+                                                : "画像を選択 (複数可)"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageSelect}
+                                    className="hidden"
+                                />
+                            </label>
+                            {selectedImages.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {selectedImages.map((file, i) => (
+                                        <Badge key={i} variant="outline" className="text-xs border-slate-600 text-slate-400 font-normal">
+                                            {file.name}
+                                        </Badge>
+                                    ))}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-5 text-xs text-red-400 hover:text-red-300 px-1"
+                                        onClick={() => setSelectedImages([])}
+                                    >
+                                        クリア
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Text Area */}
@@ -356,6 +485,6 @@ export default function ImportPage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     );
 }

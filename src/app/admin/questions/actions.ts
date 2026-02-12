@@ -357,5 +357,90 @@ export async function bulkUpsertQuestions(data: { questions: CreateQuestionData[
     }
 
     revalidatePath('/admin/questions');
+    revalidatePath('/admin/questions');
     return { results };
+}
+
+export async function cleanupOrphanedImages() {
+    const supabase = createAdminClient();
+    const bucketName = 'question-images';
+
+    try {
+        // 1. Get all files in Storage
+        // Only fetching top-level files (assuming no folders for now based on implementation)
+        const { data: files, error: listError } = await (supabase.storage.from(bucketName) as any)
+            .list();
+
+        if (listError) throw new Error(`List failed: ${listError.message}`);
+        if (!files || files.length === 0) return { deletedCount: 0, deletedFiles: [], spaceReclaimed: 0 };
+
+        // 2. Get all images referenced in DB
+        // Check both questions.image_base64 (legacy/mixed) and question_images.image_data
+
+        // table: questions
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: questions } = await (supabase.from('questions') as any)
+            .select('image_base64');
+
+        // table: question_images
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: questionImages } = await (supabase.from('question_images') as any)
+            .select('image_data');
+
+        // Create a set of "used" filenames
+        const usedFilenames = new Set<string>();
+
+        const extractFilename = (urlOrBase64: string | null) => {
+            if (!urlOrBase64) return null;
+            // If it's a supabase storage URL, extract filename
+            // URL format typically: .../storage/v1/object/public/question-images/123456789-test.png
+            if (urlOrBase64.includes(bucketName)) {
+                // Determine filename by splitting path
+                const parts = urlOrBase64.split('/');
+                return parts[parts.length - 1]; // Last part is filename
+            }
+            // If base64 or other URL, ignore logic for storage cleanup (it won't match storage files anyway)
+            return null;
+        };
+
+        questions?.forEach((q: any) => {
+            const fname = extractFilename(q.image_base64);
+            if (fname) usedFilenames.add(decodeURIComponent(fname));
+        });
+
+        questionImages?.forEach((qi: any) => {
+            const fname = extractFilename(qi.image_data);
+            if (fname) usedFilenames.add(decodeURIComponent(fname));
+        });
+
+        // 3. Identify orphans
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const orphanedFiles = files.filter((f: any) => !usedFilenames.has(f.name));
+
+        if (orphanedFiles.length === 0) {
+            return { deletedCount: 0, deletedFiles: [], spaceReclaimed: 0 };
+        }
+
+        // 4. Delete orphans
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filesToDelete = orphanedFiles.map((f: any) => f.name);
+        const { error: removeError } = await (supabase.storage.from(bucketName) as any)
+            .remove(filesToDelete);
+
+        if (removeError) throw new Error(`Remove failed: ${removeError.message}`);
+
+        // Calculate freed space
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const spaceReclaimed = orphanedFiles.reduce((acc: number, f: any) => acc + (f.metadata?.size || 0), 0);
+
+        return {
+            deletedCount: filesToDelete.length,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            deletedFiles: orphanedFiles.map((f: any) => f.name),
+            spaceReclaimed
+        };
+
+    } catch (e: any) {
+        return { error: e.message };
+    }
 }

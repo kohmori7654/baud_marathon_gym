@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getQuestions } from './actions';
 import { QuestionList } from './components/QuestionList';
+import { CleanupButton } from './components/CleanupButton';
 
 export default async function QuestionsPage({
     searchParams,
@@ -54,6 +55,7 @@ export default async function QuestionsPage({
                                 一括インポート
                             </Button>
                         </Link>
+                        <CleanupButton />
                         <Link href="/admin/questions/new">
                             <Button variant="ghost" className="text-slate-400 hover:text-white hover:bg-slate-800">
                                 <Plus className="w-4 h-4 mr-2" />
