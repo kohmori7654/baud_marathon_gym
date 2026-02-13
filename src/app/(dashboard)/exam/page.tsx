@@ -52,7 +52,7 @@ export default function ExamPage() {
                 setMode('random');
             }
             if (questionType === 'Simulation') {
-                setQuestionType('all');
+                setQuestionType('no_simulation');
             }
         }
     }, [isMobile, mode, questionType]);
@@ -227,6 +227,7 @@ export default function ExamPage() {
                                 <SelectItem value="Single">単一選択 (Single)</SelectItem>
                                 <SelectItem value="Multi">複数選択 (Multi)</SelectItem>
                                 <SelectItem value="DragDrop">ドラッグ&ドロップ (DragDrop)</SelectItem>
+                                <SelectItem value="no_simulation">シミュレーション以外(スマホ向け)</SelectItem>
                                 {!isMobile && <SelectItem value="Simulation">シミュレーション (Simulation)</SelectItem>}
                             </SelectContent>
                         </Select>

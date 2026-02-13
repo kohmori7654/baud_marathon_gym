@@ -12,28 +12,25 @@ export function DownloadCsvButton({ examinees }: DownloadCsvButtonProps) {
     const handleDownload = () => {
         // Define CSV headers
         const headers = [
-            'ID',
-            '表示名',
             'メールアドレス',
-            '目標試験',
+            '表示名',
+            '判定基準',
+            '対象試験',
             '平均スコア',
-            '直近5日間平均',
-            '最新模擬試験スコア',
-            '総セッション数',
-            '最終学習日時'
+            '総セッション',
+            '直近5日平均',
+            '最新模擬試験'
         ];
 
-        // Map data to CSV rows
         const rows = examinees.map(examinee => [
-            examinee.id,
-            examinee.display_name || '',
             examinee.email || '',
+            examinee.display_name || '',
+            examinee.signal || '',
             examinee.target_exam || '',
             examinee.averageScore.toString(),
-            examinee.last5DaysAverage > 0 ? examinee.last5DaysAverage.toString() : '',
-            examinee.latestMockExamScore !== null ? examinee.latestMockExamScore.toString() : '',
             examinee.totalSessions.toString(),
-            examinee.lastSessionDate ? new Date(examinee.lastSessionDate).toLocaleString('ja-JP') : '未実施'
+            examinee.last5DaysAverage > 0 ? examinee.last5DaysAverage.toString() : '',
+            examinee.latestMockExamScore !== null ? examinee.latestMockExamScore.toString() : ''
         ]);
 
         // Combine headers and rows

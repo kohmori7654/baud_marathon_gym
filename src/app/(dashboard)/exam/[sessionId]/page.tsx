@@ -9,7 +9,9 @@ import {
     Loader2,
     CheckCircle,
     XCircle,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Maximize2,
+    Minimize2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +48,9 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
     const [isCorrect, setIsCorrect] = useState(false);
     const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [simulationFrameExpanded, setSimulationFrameExpanded] = useState(false);
+
+    const SIMULATION_IFRAME_URL = 'https://baudroie-virtual-campus.web.app/';
 
     // Resolve params
     useEffect(() => {
@@ -73,11 +78,10 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
 
             setSession(sessionData);
 
-            // Build question query
+            // Build base question query: fetch ALL matching (no limit) for proper random/unanswered selection
             let query = supabase
                 .from('questions')
-                .select('*, options(*), question_images(*)')
-                .limit(sessionData.total_questions);
+                .select('*, options(*), question_images(*)');
 
             if (sessionData.exam_type !== 'BOTH') {
                 query = query.eq('exam_type', sessionData.exam_type);
@@ -87,32 +91,54 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                 query = query.eq('domain', sessionData.domain_filter);
             }
 
-            if (sessionData.question_type) {
-                query = query.eq('question_type', sessionData.question_type);
+            const qType = sessionData.question_type as string | null;
+            if (qType === 'no_simulation') {
+                query = query.neq('question_type', 'Simulation');
+            } else if (qType) {
+                query = query.eq('question_type', qType);
             }
 
             const { data: questionsData } = await query;
 
-            if (questionsData) {
-                // Shuffle questions
+            if (!questionsData || questionsData.length === 0) {
+                setIsLoading(false);
+                return;
+            }
+
+            const totalRequested = sessionData.total_questions;
+            let selectedQuestions: typeof questionsData;
+
+            if (sessionData.challenge_mode === 'unanswered') {
+                // 未実施優先: まだ解いていない問題を優先、なければ実施回数の少ない問題を優先
+                const { data: answerCounts } = await supabase
+                    .from('session_answers')
+                    .select('question_id')
+                    .eq('user_id', sessionData.user_id) as { data: { question_id: string }[] | null };
+
+                const countByQuestion: Record<string, number> = {};
+                (answerCounts || []).forEach((row: { question_id: string }) => {
+                    countByQuestion[row.question_id] = (countByQuestion[row.question_id] || 0) + 1;
+                });
+
+                const withCount = questionsData.map((q: QuestionWrapper) => ({
+                    q,
+                    attempts: countByQuestion[q.id] ?? 0
+                }));
+                withCount.sort((a, b) => a.attempts - b.attempts || Math.random() - 0.5);
+                selectedQuestions = withCount.slice(0, totalRequested).map(x => x.q);
+            } else {
+                // ランダム・その他: 指定の試験種別・分野・問題形式に沿ってランダムに出題
                 const shuffled = [...questionsData].sort(() => Math.random() - 0.5);
-                const slicedQuestions = shuffled.slice(0, sessionData.total_questions);
-                setQuestions(slicedQuestions);
+                selectedQuestions = shuffled.slice(0, totalRequested);
+            }
 
-                // Check if we have fewer questions than requested
-                // This happens if the DB doesn't have enough matching questions
-                if (slicedQuestions.length < sessionData.total_questions) {
-                    console.log(`Adjusting total_questions from ${sessionData.total_questions} to ${slicedQuestions.length}`);
+            setQuestions(selectedQuestions);
 
-                    // Update local state
-                    setSession(prev => prev ? { ...prev, total_questions: slicedQuestions.length } : null);
-
-                    // Update DB to ensure correct scoring denominator
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    await (supabase.from('exam_sessions') as any)
-                        .update({ total_questions: slicedQuestions.length })
-                        .eq('id', sessionData.id);
-                }
+            if (selectedQuestions.length < totalRequested) {
+                setSession(prev => prev ? { ...prev, total_questions: selectedQuestions.length } : null);
+                await (supabase.from('exam_sessions') as any)
+                    .update({ total_questions: selectedQuestions.length })
+                    .eq('id', sessionData.id);
             }
 
             setIsLoading(false);
@@ -166,6 +192,7 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
             setCurrentIndex(prev => prev + 1);
             setShowResult(false);
             setCurrentAnswer(null);
+            setSimulationFrameExpanded(false);
         }
     };
 
@@ -310,6 +337,69 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                         </div>
                     )}
 
+                    {/* Simulation: 問題文とJSON貼り付けの間にインラインフレーム + 拡大表示 */}
+                    {currentQuestion.question_type === 'Simulation' && (
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-400">バーチャルキャンパス（シミュレーション環境）</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-slate-400 hover:bg-slate-800 hover:text-white"
+                                    onClick={() => setSimulationFrameExpanded(!simulationFrameExpanded)}
+                                    aria-label={simulationFrameExpanded ? '縮小' : '拡大（画面の約9割）'}
+                                >
+                                    {simulationFrameExpanded ? (
+                                        <Minimize2 className="w-4 h-4" />
+                                    ) : (
+                                        <Maximize2 className="w-4 h-4" />
+                                    )}
+                                </Button>
+                            </div>
+                            <div
+                                className={
+                                    simulationFrameExpanded
+                                        ? 'fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4'
+                                        : 'relative rounded-lg overflow-hidden border border-slate-700 bg-slate-900'
+                                }
+                                onClick={simulationFrameExpanded ? () => setSimulationFrameExpanded(false) : undefined}
+                            >
+                                {simulationFrameExpanded && (
+                                    <>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute top-4 right-4 z-10 text-white hover:bg-white/20"
+                                            onClick={(e) => { e.stopPropagation(); setSimulationFrameExpanded(false); }}
+                                            aria-label="閉じる"
+                                        >
+                                            <Minimize2 className="w-5 h-5" />
+                                        </Button>
+                                        <div
+                                            className="absolute inset-0 flex items-center justify-center p-4"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <iframe
+                                                src={SIMULATION_IFRAME_URL}
+                                                title="Baudroie Virtual Campus"
+                                                className="w-[90vw] h-[90vh] rounded-lg border border-slate-600"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                                {!simulationFrameExpanded && (
+                                    <iframe
+                                        src={SIMULATION_IFRAME_URL}
+                                        title="Baudroie Virtual Campus"
+                                        className="w-full h-[400px] border-0"
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Question Type Component */}
                     {/* Safeguard: Ensure options array exists */}
                     {currentQuestion.question_type === 'Single' && (
@@ -346,14 +436,16 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                     )}
 
                     {currentQuestion.question_type === 'Simulation' && (
-                        <Simulation
-                            key={currentQuestion.id}
-                            targetJson={currentQuestion.simulation_target_json as Record<string, string> | null}
-                            onAnswer={(config) => handleAnswer({ config })}
-                            disabled={showResult || isSubmitting}
-                            showResult={showResult}
-                            userAnswer={currentAnswer?.config}
-                        />
+                        <>
+                            <Simulation
+                                key={currentQuestion.id}
+                                targetJson={currentQuestion.simulation_target_json as Record<string, string> | null}
+                                onAnswer={(config) => handleAnswer({ config })}
+                                disabled={showResult || isSubmitting}
+                                showResult={showResult}
+                                userAnswer={currentAnswer?.config}
+                            />
+                        </>
                     )}
 
                     {/* Explanation */}
