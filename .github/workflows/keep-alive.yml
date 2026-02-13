@@ -3,7 +3,7 @@ name: Supabase Keep Alive
 on:
   schedule:
     - cron: '0 0 * * *' # 毎日 UTC 0:00 (日本時間 9:00) に実行
-  workflow_dispatch:    # 手動実行ボタンを有効化（テスト用）
+  workflow_dispatch:    # 手動実行ボタンを有効化
 
 jobs:
   ping-db:
