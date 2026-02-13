@@ -37,9 +37,10 @@ export async function startExam(
         let sessionQs: { question_id: string }[] = [];
 
         // --- Mock Exam Logic ---
+        // --- Mock Exam Logic ---
         if (mode === 'mock_exam') {
-            // Weights definition
-            const encorWeights: Record<string, number> = {
+            // Weights definition (Domain)
+            const encorDomainWeights: Record<string, number> = {
                 'アーキテクチャ': 0.15,
                 '仮想化': 0.10,
                 'インフラストラクチャ': 0.30,
@@ -47,55 +48,103 @@ export async function startExam(
                 'セキュリティ': 0.20,
                 '自動化': 0.15,
             };
-            const enarsiWeights: Record<string, number> = {
+            const enarsiDomainWeights: Record<string, number> = {
                 'レイヤ3テクノロジー': 0.35,
                 'VPNテクノロジー': 0.20,
                 'インフラのセキュリティ': 0.20,
                 'インフラのサービス': 0.25,
             };
 
-            const weights = examType === 'ENCOR' ? encorWeights : enarsiWeights;
-            const targetCount = questionCount; // 100 or 60 typically
-            let assignedCount = 0;
+            // Counts definition (Question Type)
+            // ENCOR (100qs): Sim~3, DD~12, Select~85
+            // ENARSI (60qs): Sim~4, DD~8, Select~48
+            const typeCounts = examType === 'ENCOR'
+                ? { Simulation: 3, DragDrop: 12, Multi: 0, Single: 0 } // Select handled as remaining
+                : { Simulation: 4, DragDrop: 8, Multi: 0, Single: 0 };
 
-            // Fetch questions for each domain based on weight
-            for (const [domainKey, weight] of Object.entries(weights)) {
-                // Calculate how many questions to fetch for this domain
-                const countForDomain = Math.floor(targetCount * weight);
-                if (countForDomain <= 0) continue;
+            const domainWeights = examType === 'ENCOR' ? encorDomainWeights : enarsiDomainWeights;
+            const totalCount = questionCount;
 
-                // Attempt to find questions matching this domain (using partial match)
+            // Helper to fetch questions with priority: Important > Random
+            const fetchQuestions = async (type: string | string[], count: number, domainPattern?: string) => {
+                let query = (supabaseAdmin.from('questions') as any)
+                    .select('id, is_important')
+                    .eq('exam_type', examType);
+
+                if (Array.isArray(type)) {
+                    query = query.in('question_type', type);
+                } else {
+                    query = query.eq('question_type', type);
+                }
+
+                if (domainPattern) {
+                    query = query.ilike('domain', `%${domainPattern}%`);
+                }
+
+                // We fetch more than needed to allow random selection among non-important ones
+                // Ideally we want all important ones, then random others.
+                // Since we can't easily do "order by is_important desc, random()" without RPC,
+                // we fetch a larger batch sorted by importance, then shuffle the non-important tail in JS?
+                // Or just fetch all candidates (assuming DB isn't huge yet) and shuffle in JS.
+                // Let's fetch up to 100 candidates to get enough variety.
+                const { data, error } = await query.order('is_important', { ascending: false }).limit(100);
+
+                if (error || !data) return [];
+
+                // Separate important and normal
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: qIds } = await (supabaseAdmin.from('questions') as any)
-                    .select('id')
-                    .eq('exam_type', examType)
-                    .ilike('domain', `%${domainKey}%`) // Simple partial match
-                    .limit(countForDomain);
+                const important = data.filter((q: any) => q.is_important);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const normal = data.filter((q: any) => !q.is_important);
 
-                if (qIds && qIds.length > 0) {
-                    // Add found questions (shuffle/randomize might be needed if api returns sorted)
-                    // supabase select without order is somewhat indeterminate, but better to RANDOM() if possible.
-                    // For now, simpler: just take what we get. Ideally use .rpc() for random.
-                    sessionQs.push(...qIds.map((q: any) => ({ question_id: q.id })));
-                    assignedCount += qIds.length;
+                // Shuffle normal questions to ensure randomness
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const shuffledNormal = normal.sort(() => 0.5 - Math.random());
+
+                // Combine: Important first, then shuffled normal
+                const candidates = [...important, ...shuffledNormal];
+
+                // Take required count
+                return candidates.slice(0, count).map(q => ({ question_id: q.id }));
+            };
+
+            // 1. Fetch Simulations
+            const simQs = await fetchQuestions('Simulation', typeCounts.Simulation);
+            sessionQs.push(...simQs);
+
+            // 2. Fetch DragDrops
+            const ddQs = await fetchQuestions('DragDrop', typeCounts.DragDrop);
+            sessionQs.push(...ddQs);
+
+            // 3. Fetch Selects (Single/Multi) distributed by Domain
+            const currentCount = sessionQs.length;
+            const remainingForSelect = totalCount - currentCount;
+
+            if (remainingForSelect > 0) {
+                let assignedSelectCount = 0;
+
+                for (const [domainKey, weight] of Object.entries(domainWeights)) {
+                    // Calculate quota for this domain within the Select portion
+                    // Note: We apply the domain weight to the *remaining* (Select) portion, 
+                    // preserving relative domain balance in the main bulk of the exam.
+                    const countForDomain = Math.floor(remainingForSelect * weight);
+                    if (countForDomain <= 0) continue;
+
+                    const domainQs = await fetchQuestions(['Single', 'Multi'], countForDomain, domainKey);
+                    sessionQs.push(...domainQs);
+                    assignedSelectCount += domainQs.length;
+                }
+
+                // Fill any remaining gap with random Select questions (any domain)
+                const finalGap = totalCount - sessionQs.length;
+                if (finalGap > 0) {
+                    const gapQs = await fetchQuestions(['Single', 'Multi'], finalGap);
+                    sessionQs.push(...gapQs);
                 }
             }
 
-            // Fill remainder with random questions if we didn't hit the target
-            // (e.g. domains didn't match, or not enough questions in DB)
-            const remaining = targetCount - assignedCount;
-            if (remaining > 0) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data: randomQs } = await (supabaseAdmin.from('questions') as any)
-                    .select('id')
-                    .eq('exam_type', examType)
-                    .range(0, remaining - 1); // This isn't truly random but fills the gap.
-                // In a real app we'd use a random RPC.
-
-                if (randomQs) {
-                    sessionQs.push(...randomQs.map((q: any) => ({ question_id: q.id })));
-                }
-            }
+            // Final Shuffle of the whole session
+            sessionQs = sessionQs.sort(() => 0.5 - Math.random());
         }
 
         // Ensure we handle standard modes if NOT mock_exam OR if mock_exam logic was implemented differently above

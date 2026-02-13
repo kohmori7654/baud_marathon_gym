@@ -185,20 +185,6 @@ export function QuestionFilter() {
                     <X className="w-4 h-4 mr-2" />
                     条件クリア
                 </Button>
-
-                <Button
-                    variant="outline"
-                    onClick={handleExport}
-                    disabled={isExporting}
-                    className="border-emerald-600 text-emerald-500 hover:bg-emerald-500/10"
-                >
-                    {isExporting ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                        <Download className="w-4 h-4 mr-2" />
-                    )}
-                    CSVエクスポート
-                </Button>
             </div>
         </div>
     );

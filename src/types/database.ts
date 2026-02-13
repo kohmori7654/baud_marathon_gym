@@ -46,6 +46,7 @@ export interface Question {
   display_id?: number; // Added: Sequential ID for display
   created_at?: string;
   updated_at?: string;
+  is_important?: boolean;
 }
 
 export interface Option {
@@ -150,6 +151,7 @@ export type Database = {
           explanation?: string | null;
           image_base64?: string | null;
           simulation_target_json?: Record<string, unknown> | null;
+          is_important?: boolean;
         };
         Update: {
           exam_type?: TargetExamType;
@@ -160,6 +162,7 @@ export type Database = {
           explanation?: string | null;
           image_base64?: string | null;
           simulation_target_json?: Record<string, unknown> | null;
+          is_important?: boolean;
         };
       };
       question_images: {

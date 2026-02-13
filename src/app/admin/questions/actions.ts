@@ -19,6 +19,7 @@ export interface CreateQuestionData {
         isCorrect: boolean;
         sortOrder: number;
     }[];
+    isImportant?: boolean;
 }
 
 export type UpdateQuestionData = Partial<CreateQuestionData> & { id: string };
@@ -144,7 +145,7 @@ export async function exportQuestions(
 
     // Generate CSV
     // Header
-    const header = ['ID', '試験種別', '分野', '問題形式', '問題文', '正解肢', '画像の有無', '作成日時'];
+    const header = ['ID', '重要', '試験種別', '分野', '問題形式', '問題文', '正解肢', '画像の有無', '作成日時'];
     const rows = questions.map((q: any) => {
         // Format ID
         const prefix = q.exam_type === 'ENCOR' ? 'COR' : q.exam_type === 'ENARSI' ? 'CON' : 'UNK';
@@ -169,6 +170,7 @@ export async function exportQuestions(
 
         return [
             escape(formattedId),
+            escape(q.is_important ? '★' : ''),
             escape(q.exam_type),
             escape(q.domain),
             escape(q.question_type),
@@ -268,6 +270,7 @@ export async function createQuestion(data: CreateQuestionData) {
         simulation_target_json: data.simulationTargetJson || null,
         hash: hash,
         display_id: nextDisplayId,
+        is_important: data.isImportant || false,
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -341,6 +344,7 @@ export async function updateQuestion(data: UpdateQuestionData) {
     if (data.questionType) questionUpdate.question_type = data.questionType;
     if (data.explanation !== undefined) questionUpdate.explanation = data.explanation;
     if (data.simulationTargetJson !== undefined) questionUpdate.simulation_target_json = data.simulationTargetJson;
+    if (data.isImportant !== undefined) questionUpdate.is_important = data.isImportant;
 
     // Legacy image update if explicitly provided, or update it if images array is provided
     if (data.imageBase64 !== undefined) {
@@ -610,4 +614,23 @@ export async function getDistinctDomains(): Promise<string[]> {
     // Extract unique domains
     const domains = [...new Set(data.map((d: { domain: string }) => d.domain).filter(Boolean))] as string[];
     return domains;
+}
+
+/**
+ * Toggle the is_important flag for a question
+ */
+export async function toggleImportant(id: string, currentStatus: boolean) {
+    const supabase = createAdminClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('questions') as any)
+        .update({ is_important: !currentStatus })
+        .eq('id', id);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    revalidatePath('/admin/questions');
+    return { success: true };
 }

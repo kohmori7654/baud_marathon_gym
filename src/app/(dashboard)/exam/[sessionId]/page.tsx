@@ -106,7 +106,7 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
             }
 
             const totalRequested = sessionData.total_questions;
-            let selectedQuestions: typeof questionsData;
+            let selectedQuestions: QuestionWrapper[];
 
             if (sessionData.challenge_mode === 'unanswered') {
                 // 未実施優先: まだ解いていない問題を優先、なければ実施回数の少ない問題を優先
