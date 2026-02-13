@@ -8,8 +8,33 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Upload, FileJson, FileType, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, FileJson, FileType, CheckCircle, AlertCircle, Loader2, Download } from 'lucide-react';
 import { bulkCreateAssignments } from '../actions';
+
+const ASSIGNMENT_CSV_TEMPLATE = `supporter_email,examinee1,examinee2,examinee3
+supporter1@example.com,examinee1@example.com,examinee2@example.com,
+supporter2@example.com,examinee3@example.com,,`;
+
+const ASSIGNMENT_JSON_TEMPLATE = JSON.stringify([
+    {
+        supporter_email: "supporter1@example.com",
+        examinee_emails: ["examinee1@example.com", "examinee2@example.com"]
+    },
+    {
+        supporter_email: "supporter2@example.com",
+        examinee_emails: ["examinee3@example.com"]
+    }
+], null, 2);
+
+const downloadTemplate = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+};
 
 export function BulkAssignmentImport() {
     const router = useRouter();
@@ -143,8 +168,37 @@ export function BulkAssignmentImport() {
                             <FileType className="w-5 h-5 text-emerald-400" />
                             ファイルから読み込む
                         </CardTitle>
-                        <CardDescription className="text-slate-400">
-                            CSVまたはJSONファイルをアップロードしてください
+                        <CardDescription className="text-slate-400 flex items-center justify-between">
+                            <span>CSVまたはJSONファイルをアップロードしてください</span>
+                            <span className="flex items-center gap-1">
+                                <span className="text-xs">ひな形DL:</span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-slate-400 hover:text-white h-7 px-2 text-xs"
+                                    onClick={() => downloadTemplate(
+                                        ASSIGNMENT_CSV_TEMPLATE,
+                                        'assignments_template.csv',
+                                        'text/csv'
+                                    )}
+                                >
+                                    <Download className="w-3 h-3 mr-1" />
+                                    CSV
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-slate-400 hover:text-white h-7 px-2 text-xs"
+                                    onClick={() => downloadTemplate(
+                                        ASSIGNMENT_JSON_TEMPLATE,
+                                        'assignments_template.json',
+                                        'application/json'
+                                    )}
+                                >
+                                    <Download className="w-3 h-3 mr-1" />
+                                    JSON
+                                </Button>
+                            </span>
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">

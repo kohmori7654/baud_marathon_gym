@@ -22,10 +22,21 @@ import {
     Loader2,
     CheckCircle,
     XCircle,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Download
 } from 'lucide-react';
 import { bulkUpsertQuestions } from '@/app/admin/questions/actions';
 import { createClient } from '@/lib/supabase/client';
+
+const downloadTemplate = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+};
 
 interface ImportResult {
     hash: string;
@@ -291,8 +302,21 @@ export default function ImportPage() {
                             <FileJson className="w-5 h-5" />
                             JSONデータ
                         </CardTitle>
-                        <CardDescription className="text-slate-400">
-                            JSONファイルをアップロードするか、テキストエリアに直接入力してください
+                        <CardDescription className="text-slate-400 flex items-center justify-between">
+                            <span>JSONファイルをアップロードするか、テキストエリアに直接入力してください</span>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-slate-400 hover:text-white h-7 px-2 text-xs"
+                                onClick={() => downloadTemplate(
+                                    JSON.stringify(SAMPLE_TEMPLATES[sampleType], null, 2),
+                                    `questions_template_${sampleType}.json`,
+                                    'application/json'
+                                )}
+                            >
+                                <Download className="w-3 h-3 mr-1" />
+                                ひな形DL
+                            </Button>
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">

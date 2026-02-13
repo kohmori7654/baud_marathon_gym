@@ -15,7 +15,8 @@ import {
     Loader2,
     CheckCircle,
     XCircle,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Download
 } from 'lucide-react';
 import { bulkCreateUsers } from '../actions';
 import type { UserRole, TargetExamType } from '@/types/database';
@@ -48,6 +49,16 @@ const SAMPLE_JSON = `{
 const SAMPLE_CSV = `email,password,displayName,role,targetExam
 user1@example.com,pass123,TestUser,examinee,ENCOR
 supporter@example.com,pass123,Supporter,supporter,BOTH`;
+
+const downloadTemplate = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+};
 
 export default function ImportUsersPage() {
     const [jsonInput, setJsonInput] = useState('');
@@ -149,8 +160,37 @@ export default function ImportUsersPage() {
                 <Card className="bg-slate-800/50 border-slate-700">
                     <CardHeader>
                         <CardTitle className="text-white">インポートデータ</CardTitle>
-                        <CardDescription className="text-slate-400">
-                            以下のフォーマットに従ってデータを入力してください
+                        <CardDescription className="text-slate-400 flex items-center justify-between">
+                            <span>以下のフォーマットに従ってデータを入力してください</span>
+                            <span className="flex items-center gap-1">
+                                <span className="text-xs">ひな形DL:</span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-slate-400 hover:text-white h-7 px-2 text-xs"
+                                    onClick={() => downloadTemplate(
+                                        SAMPLE_CSV,
+                                        'users_template.csv',
+                                        'text/csv'
+                                    )}
+                                >
+                                    <Download className="w-3 h-3 mr-1" />
+                                    CSV
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-slate-400 hover:text-white h-7 px-2 text-xs"
+                                    onClick={() => downloadTemplate(
+                                        SAMPLE_JSON,
+                                        'users_template.json',
+                                        'application/json'
+                                    )}
+                                >
+                                    <Download className="w-3 h-3 mr-1" />
+                                    JSON
+                                </Button>
+                            </span>
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -257,8 +297,8 @@ export default function ImportUsersPage() {
                                     <div
                                         key={i}
                                         className={`p-3 rounded-lg border ${r.success
-                                                ? 'bg-emerald-500/10 border-emerald-500/30'
-                                                : 'bg-red-500/10 border-red-500/30'
+                                            ? 'bg-emerald-500/10 border-emerald-500/30'
+                                            : 'bg-red-500/10 border-red-500/30'
                                             }`}
                                     >
                                         <div className="flex justify-between items-start">
@@ -283,6 +323,6 @@ export default function ImportUsersPage() {
                     </Card>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
