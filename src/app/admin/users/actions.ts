@@ -10,31 +10,88 @@ interface CreateUserData {
     displayName?: string;
     role: UserRole;
     targetExam: TargetExamType;
+    department?: string;
 }
 
 interface BulkUserData {
     users: CreateUserData[];
 }
 
-export async function getUsers(page: number = 1, limit: number = 20) {
+export interface UserWithSupporter extends User {
+    supporter_name?: string | null;
+}
+
+export async function getUsers(
+    page: number = 1,
+    limit: number = 20,
+    filters?: { department?: string; supporterId?: string }
+) {
     const supabase = createAdminClient();
     const start = (page - 1) * limit;
     const end = start + limit - 1;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: users, count, error } = await (supabase.from('users') as any)
+    let query = (supabase.from('users') as any)
         .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(start, end);
+        .order('created_at', { ascending: false });
+
+    if (filters?.department) {
+        query = query.eq('department', filters.department);
+    }
+
+    // If filtering by supporter, get the examinee IDs first
+    if (filters?.supporterId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: assignments } = await (supabase.from('supporter_assignments') as any)
+            .select('examinee_id')
+            .eq('supporter_id', filters.supporterId);
+        const examineeIds = (assignments || []).map((a: any) => a.examinee_id);
+        if (examineeIds.length > 0) {
+            query = query.in('id', examineeIds);
+        } else {
+            // No examinees assigned to this supporter - return empty
+            return { users: [] as UserWithSupporter[], totalCount: 0, totalPages: 0, supporters: [] as User[] };
+        }
+    }
+
+    const { data: users, count, error } = await query.range(start, end);
 
     if (error) {
         throw new Error(`Failed to fetch users: ${error.message}`);
     }
 
+    // Get all supporter assignments to map examinee -> supporter name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: allAssignments } = await (supabase.from('supporter_assignments') as any)
+        .select('supporter_id, examinee_id');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: allSupporters } = await (supabase.from('users') as any)
+        .select('id, display_name, email')
+        .eq('role', 'supporter')
+        .order('display_name');
+
+    // Build examinee -> supporter name map
+    const supporterMap: Record<string, string> = {};
+    for (const s of (allSupporters || [])) {
+        supporterMap[s.id] = s.display_name || s.email;
+    }
+
+    const examineeSupporterMap: Record<string, string> = {};
+    for (const a of (allAssignments || [])) {
+        examineeSupporterMap[a.examinee_id] = supporterMap[a.supporter_id] || '-';
+    }
+
+    const usersWithSupporter: UserWithSupporter[] = (users || []).map((u: User) => ({
+        ...u,
+        supporter_name: examineeSupporterMap[u.id] || null,
+    }));
+
     return {
-        users: users as User[],
+        users: usersWithSupporter,
         totalCount: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
+        totalPages: Math.ceil((count || 0) / limit),
+        supporters: (allSupporters || []) as User[],
     };
 }
 
@@ -66,6 +123,7 @@ export async function createUser(data: CreateUserData) {
             display_name: data.displayName || data.email.split('@')[0],
             role: data.role,
             target_exam: data.targetExam,
+            department: data.department || null,
         })
         .eq('id', authData.user.id);
 
@@ -86,6 +144,7 @@ export async function updateUser(userId: string, data: Partial<CreateUserData>) 
     if (data.displayName !== undefined) updateData.display_name = data.displayName;
     if (data.role !== undefined) updateData.role = data.role;
     if (data.targetExam !== undefined) updateData.target_exam = data.targetExam;
+    if (data.department !== undefined) updateData.department = data.department;
 
     // auth.users metadata should also be updated if display name changes
     if (data.displayName) {

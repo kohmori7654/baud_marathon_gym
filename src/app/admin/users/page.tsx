@@ -22,6 +22,17 @@ import {
     UserCog,
     Upload
 } from 'lucide-react';
+import { UserFilters } from './user-filters';
+
+const DEPARTMENTS = [
+    '第一技術部',
+    '第二技術部',
+    '第三技術部',
+    '第四技術部',
+    '第五技術部',
+    '第六技術部',
+    'その他',
+];
 
 export default async function UsersPage({
     searchParams,
@@ -31,8 +42,13 @@ export default async function UsersPage({
     const resolvedSearchParams = await searchParams;
     const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
     const limit = 20;
+    const departmentFilter = typeof resolvedSearchParams.department === 'string' ? resolvedSearchParams.department : undefined;
+    const supporterFilter = typeof resolvedSearchParams.supporter === 'string' ? resolvedSearchParams.supporter : undefined;
 
-    const { users, totalPages } = await getUsers(page, limit);
+    const { users, totalPages, supporters } = await getUsers(page, limit, {
+        department: departmentFilter,
+        supporterId: supporterFilter,
+    });
 
     const getRoleBadge = (role: string) => {
         switch (role) {
@@ -47,7 +63,7 @@ export default async function UsersPage({
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
-            <div className="max-w-6xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href="/admin">
@@ -88,6 +104,14 @@ export default async function UsersPage({
                     </div>
                 </div>
 
+                {/* Filter UI */}
+                <UserFilters
+                    departments={DEPARTMENTS}
+                    supporters={supporters}
+                    currentDepartment={departmentFilter}
+                    currentSupporter={supporterFilter}
+                />
+
                 <Card className="bg-slate-800/50 border-slate-700">
                     <CardContent className="p-0">
                         <Table>
@@ -96,6 +120,8 @@ export default async function UsersPage({
                                     <TableHead className="text-slate-400">メールアドレス</TableHead>
                                     <TableHead className="text-slate-400">表示名</TableHead>
                                     <TableHead className="text-slate-400">ロール</TableHead>
+                                    <TableHead className="text-slate-400">所属部</TableHead>
+                                    <TableHead className="text-slate-400">サポーター</TableHead>
                                     <TableHead className="text-slate-400">対象試験</TableHead>
                                     <TableHead className="text-slate-400">登録日</TableHead>
                                     <TableHead className="text-slate-400 text-right">操作</TableHead>
@@ -112,6 +138,12 @@ export default async function UsersPage({
                                         </TableCell>
                                         <TableCell>
                                             {getRoleBadge(user.role)}
+                                        </TableCell>
+                                        <TableCell className="text-slate-300 text-sm">
+                                            {user.department || '-'}
+                                        </TableCell>
+                                        <TableCell className="text-slate-300 text-sm">
+                                            {user.supporter_name || '-'}
                                         </TableCell>
                                         <TableCell>
                                             {user.target_exam ? (
@@ -138,7 +170,7 @@ export default async function UsersPage({
                                 ))}
                                 {(!users || users.length === 0) && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                                        <TableCell colSpan={8} className="text-center text-slate-500 py-8">
                                             ユーザーが見つかりません
                                         </TableCell>
                                     </TableRow>

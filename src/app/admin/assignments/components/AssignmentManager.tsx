@@ -1,10 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { User, SupporterAssignment } from '@/types/database';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import type { User } from '@/types/database';
+import type { SupporterStats } from '../actions';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import {
     Dialog,
     DialogContent,
@@ -13,49 +23,24 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Plus, UserMinus, UserPlus, Users, Search } from 'lucide-react';
+import { Eye, Edit, UserMinus, UserPlus, Search, Users, CheckCircle, XCircle } from 'lucide-react';
 import { assignExaminee, unassignExaminee } from '../actions';
-import { useRouter } from 'next/navigation';
 
 interface AssignmentManagerProps {
-    supporters: User[];
+    supporterStats: SupporterStats[];
     examinees: User[];
-    assignments: SupporterAssignment[];
 }
 
-export function AssignmentManager({ supporters, examinees, assignments }: AssignmentManagerProps) {
+export function AssignmentManager({ supporterStats, examinees }: AssignmentManagerProps) {
     const router = useRouter();
-    const [selectedSupporter, setSelectedSupporter] = useState<string | null>(null);
-    const [selectedExamineeToAssign, setSelectedExamineeToAssign] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedExamineeToAssign, setSelectedExamineeToAssign] = useState<string | null>(null);
 
-    // Group assignments by supporter
-    const assignmentsBySupporter = assignments.reduce((acc, curr) => {
-        if (!acc[curr.supporter_id]) acc[curr.supporter_id] = [];
-        acc[curr.supporter_id].push(curr.examinee_id);
-        return acc;
-    }, {} as Record<string, string[]>);
-
-    // Get unassigned examinees (optional: if we want to show only truly unassigned, 
-    // but typically a supporter can have multiple examinees, and an examinee might 
-    // strictly belong to one supporter or multiple. Assuming M:N for schema capability, 
-    // but typical use case is 1 examinee -> 1 supporter. 
-    // For now, allow assigning any examinee who is NOT assigned to THIS supporter.)
-
-    const handleAssign = async () => {
-        if (!selectedSupporter || !selectedExamineeToAssign) return;
+    const handleAssign = async (supporterId: string) => {
+        if (!selectedExamineeToAssign) return;
         setIsLoading(true);
-
-        const result = await assignExaminee(selectedSupporter, selectedExamineeToAssign);
+        const result = await assignExaminee(supporterId, selectedExamineeToAssign);
         if (result.error) {
             alert(result.error);
         } else {
@@ -67,7 +52,6 @@ export function AssignmentManager({ supporters, examinees, assignments }: Assign
 
     const handleUnassign = async (supporterId: string, examineeId: string) => {
         if (!confirm('この割り当てを解除しますか？')) return;
-
         setIsLoading(true);
         const result = await unassignExaminee(supporterId, examineeId);
         if (result.error) {
@@ -79,133 +63,196 @@ export function AssignmentManager({ supporters, examinees, assignments }: Assign
     };
 
     return (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {supporters.map((supporter) => {
-                const assignedExamineeIds = assignmentsBySupporter[supporter.id] || [];
-                const assignedExaminees = examinees.filter(e => assignedExamineeIds.includes(e.id));
-                const availableExaminees = examinees.filter(e => !assignedExamineeIds.includes(e.id));
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
+            <Table>
+                <TableHeader>
+                    <TableRow className="border-slate-700 hover:bg-transparent">
+                        <TableHead className="text-slate-400">サポーター名</TableHead>
+                        <TableHead className="text-slate-400">所属部</TableHead>
+                        <TableHead className="text-slate-400">受験者</TableHead>
+                        <TableHead className="text-slate-400 text-center">受験者数</TableHead>
+                        <TableHead className="text-slate-400 text-center">合格者数</TableHead>
+                        <TableHead className="text-slate-400 text-right">操作</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {supporterStats.map((supporter) => {
+                        const assignedExamineeIds = supporter.examinees.map(e => e.id);
+                        const availableExaminees = examinees.filter(e => !assignedExamineeIds.includes(e.id));
 
-                return (
-                    <Card key={supporter.id} className="bg-slate-800/50 border-slate-700 flex flex-col">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-white flex items-center justify-between text-base">
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-emerald-500/20 p-2 rounded-full">
-                                        <Users className="w-4 h-4 text-emerald-400" />
-                                    </div>
-                                    <span className="truncate max-w-[150px]" title={supporter.display_name || supporter.email}>
-                                        {supporter.display_name || 'No Name'}
-                                    </span>
-                                </div>
-                                <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
-                                    {assignedExaminees.length}名担当
-                                </Badge>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex flex-col gap-4">
-                            <div className="flex-1 space-y-2 min-h-[100px]">
-                                {assignedExaminees.length > 0 ? (
-                                    assignedExaminees.map((ex) => (
-                                        <div key={ex.id} className="flex items-center justify-between p-2 bg-slate-900/50 rounded text-sm border border-slate-700/50">
-                                            <span className="text-slate-300 truncate max-w-[140px]" title={ex.display_name || ex.email}>
-                                                {ex.display_name || ex.email}
-                                            </span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 text-slate-500 hover:text-red-400"
-                                                onClick={() => handleUnassign(supporter.id, ex.id)}
-                                                disabled={isLoading}
-                                            >
-                                                <UserMinus className="w-3 h-3" />
-                                            </Button>
+                        return (
+                            <TableRow key={supporter.id} className="border-slate-700 hover:bg-slate-800/50">
+                                <TableCell className="text-white font-medium">
+                                    <div className="flex items-center gap-2">
+                                        <div className="bg-emerald-500/20 p-1.5 rounded-full">
+                                            <Users className="w-3 h-3 text-emerald-400" />
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="text-slate-500 text-sm italic text-center py-4">
-                                        担当者なし
-                                    </p>
-                                )}
-                            </div>
-
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button
-                                        className="w-full border border-dashed border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700"
-                                        variant="ghost"
-                                        onClick={() => setSelectedSupporter(supporter.id)}
-                                    >
-                                        <UserPlus className="w-4 h-4 mr-2" />
-                                        受験者を割り当て
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="bg-slate-800 border-slate-700 text-white">
-                                    <DialogHeader>
-                                        <DialogTitle>受験者を割り当て</DialogTitle>
-                                        <DialogDescription className="text-slate-400">
-                                            {supporter.display_name || supporter.email} の担当として追加する受験者を選択してください。
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                        <div className="space-y-2">
-                                            <div className="relative">
-                                                <Users className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                                                <Input
-                                                    placeholder="名前またはメールで検索..."
-                                                    className="pl-9 bg-slate-900 border-slate-600 text-white"
-                                                    value={searchQuery}
-                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="h-[200px] border rounded-md border-slate-700 bg-slate-900/50 overflow-y-auto p-1">
-                                                {availableExaminees
-                                                    .filter(ex =>
-                                                        (ex.display_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                        ex.email.toLowerCase().includes(searchQuery.toLowerCase())
-                                                    )
-                                                    .map((ex) => (
-                                                        <div
-                                                            key={ex.id}
-                                                            className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-slate-800 transition-colors ${selectedExamineeToAssign === ex.id ? 'bg-emerald-500/20 ring-1 ring-emerald-500' : ''}`}
-                                                            onClick={() => setSelectedExamineeToAssign(ex.id)}
-                                                        >
-                                                            <div className="flex flex-col overflow-hidden">
-                                                                <span className="text-sm font-medium text-slate-200 truncate">
-                                                                    {ex.display_name || 'No Name'}
-                                                                </span>
-                                                                <span className="text-xs text-slate-500 truncate">
-                                                                    {ex.email}
-                                                                </span>
+                                        {supporter.display_name || supporter.email}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-slate-300 text-sm whitespace-nowrap">
+                                    {supporter.department || '-'}
+                                </TableCell>
+                                <TableCell className="text-slate-300 text-sm truncate max-w-[300px]" title={
+                                    supporter.examinees.map(e => e.display_name || e.email).join(', ')
+                                }>
+                                    {supporter.examinees.length > 0
+                                        ? supporter.examinees.map(e => e.display_name || e.email).join(', ')
+                                        : <span className="text-slate-500 italic">担当なし</span>
+                                    }
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Badge variant="outline" className="border-slate-600 text-slate-300">
+                                        {supporter.examinee_count}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Badge variant="outline" className={
+                                        supporter.passed_count > 0
+                                            ? 'border-emerald-500/50 text-emerald-400'
+                                            : 'border-slate-600 text-slate-400'
+                                    }>
+                                        {supporter.passed_count}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                        {/* Detail Button */}
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-700" title="詳細">
+                                                    <Eye className="w-4 h-4 text-slate-400" />
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-lg">
+                                                <DialogHeader>
+                                                    <DialogTitle>受験者一覧</DialogTitle>
+                                                    <DialogDescription className="text-slate-400">
+                                                        {supporter.display_name || supporter.email} の担当受験者
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                                                    {supporter.examinees.length > 0 ? (
+                                                        supporter.examinees.map((ex) => (
+                                                            <div key={ex.id} className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-700/50">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-sm font-medium text-slate-200">
+                                                                        {ex.display_name || 'No Name'}
+                                                                    </span>
+                                                                    <span className="text-xs text-slate-500">{ex.email}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    {ex.passed ? (
+                                                                        <Badge className="bg-emerald-500/20 text-emerald-400 border-0">
+                                                                            <CheckCircle className="w-3 h-3 mr-1" />合格
+                                                                        </Badge>
+                                                                    ) : (
+                                                                        <Badge className="bg-slate-500/20 text-slate-400 border-0">
+                                                                            <XCircle className="w-3 h-3 mr-1" />未合格
+                                                                        </Badge>
+                                                                    )}
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-7 w-7 text-slate-500 hover:text-red-400"
+                                                                        onClick={() => handleUnassign(supporter.id, ex.id)}
+                                                                        disabled={isLoading}
+                                                                    >
+                                                                        <UserMinus className="w-3 h-3" />
+                                                                    </Button>
+                                                                </div>
                                                             </div>
-                                                            {selectedExamineeToAssign === ex.id && (
-                                                                <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2" />
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                {availableExaminees.filter(ex =>
-                                                    (ex.display_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                    ex.email.toLowerCase().includes(searchQuery.toLowerCase())
-                                                ).length === 0 && (
-                                                        <p className="text-center text-slate-500 text-sm py-8">
-                                                            該当するユーザーがいません
-                                                        </p>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-center text-slate-500 text-sm py-8">担当受験者がいません</p>
                                                     )}
-                                            </div>
-                                        </div>
-                                        <Button
-                                            className="w-full bg-emerald-600 hover:bg-emerald-500"
-                                            onClick={handleAssign}
-                                            disabled={!selectedExamineeToAssign || isLoading}
-                                        >
-                                            割り当て実行
-                                        </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+
+                                        {/* Edit/Assign Button */}
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-700" title="編集">
+                                                    <Edit className="w-4 h-4 text-slate-400" />
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="bg-slate-800 border-slate-700 text-white">
+                                                <DialogHeader>
+                                                    <DialogTitle>受験者を割り当て</DialogTitle>
+                                                    <DialogDescription className="text-slate-400">
+                                                        {supporter.display_name || supporter.email} に受験者を追加します
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4 py-4">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                                                        <Input
+                                                            placeholder="名前またはメールで検索..."
+                                                            className="pl-9 bg-slate-900 border-slate-600 text-white"
+                                                            value={searchQuery}
+                                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="h-[200px] border rounded-md border-slate-700 bg-slate-900/50 overflow-y-auto p-1">
+                                                        {availableExaminees
+                                                            .filter(ex =>
+                                                                (ex.display_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                                ex.email.toLowerCase().includes(searchQuery.toLowerCase())
+                                                            )
+                                                            .map((ex) => (
+                                                                <div
+                                                                    key={ex.id}
+                                                                    className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-slate-800 transition-colors ${selectedExamineeToAssign === ex.id ? 'bg-emerald-500/20 ring-1 ring-emerald-500' : ''}`}
+                                                                    onClick={() => setSelectedExamineeToAssign(ex.id)}
+                                                                >
+                                                                    <div className="flex flex-col overflow-hidden">
+                                                                        <span className="text-sm font-medium text-slate-200 truncate">
+                                                                            {ex.display_name || 'No Name'}
+                                                                        </span>
+                                                                        <span className="text-xs text-slate-500 truncate">
+                                                                            {ex.email}
+                                                                        </span>
+                                                                    </div>
+                                                                    {selectedExamineeToAssign === ex.id && (
+                                                                        <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2" />
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        {availableExaminees.filter(ex =>
+                                                            (ex.display_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                            ex.email.toLowerCase().includes(searchQuery.toLowerCase())
+                                                        ).length === 0 && (
+                                                                <p className="text-center text-slate-500 text-sm py-8">
+                                                                    該当するユーザーがいません
+                                                                </p>
+                                                            )}
+                                                    </div>
+                                                    <Button
+                                                        className="w-full bg-emerald-600 hover:bg-emerald-500"
+                                                        onClick={() => handleAssign(supporter.id)}
+                                                        disabled={!selectedExamineeToAssign || isLoading}
+                                                    >
+                                                        <UserPlus className="w-4 h-4 mr-2" />
+                                                        割り当て実行
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
                                     </div>
-                                </DialogContent>
-                            </Dialog>
-                        </CardContent>
-                    </Card>
-                );
-            })}
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
+                    {supporterStats.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={6} className="text-center text-slate-500 py-8">
+                                サポーターが見つかりません
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
         </div>
     );
 }

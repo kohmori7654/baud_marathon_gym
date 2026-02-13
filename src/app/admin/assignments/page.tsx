@@ -2,13 +2,12 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AssignmentManager } from './components/AssignmentManager';
 import { Users, ArrowLeft } from 'lucide-react';
-import { getSupporters, getExaminees, getAssignments } from './actions';
+import { getSupporterStats, getExaminees } from './actions';
 
 export default async function AssignmentsPage() {
-    const [supporters, examinees, assignments] = await Promise.all([
-        getSupporters(),
+    const [supporterStats, examinees] = await Promise.all([
+        getSupporterStats(),
         getExaminees(),
-        getAssignments(),
     ]);
 
     return (
@@ -37,18 +36,10 @@ export default async function AssignmentsPage() {
                     </div>
                 </div>
 
-                {supporters.length === 0 ? (
-                    <div className="text-center py-20 bg-slate-800/30 rounded-lg border border-slate-700">
-                        <p className="text-slate-400">サポーターが見つかりません</p>
-                        <p className="text-sm text-slate-500 mt-2">ユーザー管理画面でロールを「supporter」に設定してください</p>
-                    </div>
-                ) : (
-                    <AssignmentManager
-                        supporters={supporters}
-                        examinees={examinees}
-                        assignments={assignments}
-                    />
-                )}
+                <AssignmentManager
+                    supporterStats={supporterStats}
+                    examinees={examinees}
+                />
             </div>
         </div>
     );

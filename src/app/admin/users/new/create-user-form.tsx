@@ -29,12 +29,23 @@ import {
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+const DEPARTMENTS = [
+    '第一技術部',
+    '第二技術部',
+    '第三技術部',
+    '第四技術部',
+    '第五技術部',
+    '第六技術部',
+    'その他',
+] as const;
+
 const formSchema = z.object({
     email: z.string().email({ message: '有効なメールアドレスを入力してください' }),
     password: z.string().min(8, { message: 'パスワードは8文字以上である必要があります' }),
     displayName: z.string().optional(),
     role: z.enum(['examinee', 'supporter', 'admin']),
     targetExam: z.enum(['ENCOR', 'ENARSI', 'BOTH']),
+    department: z.string().optional(),
 });
 
 export function CreateUserForm() {
@@ -50,6 +61,7 @@ export function CreateUserForm() {
             displayName: '',
             role: 'examinee',
             targetExam: 'ENCOR',
+            department: '',
         },
     });
 
@@ -64,6 +76,7 @@ export function CreateUserForm() {
                 displayName: values.displayName || undefined,
                 role: values.role,
                 targetExam: values.targetExam,
+                department: values.department || undefined,
             });
 
             if (result.error) {
@@ -140,6 +153,29 @@ export function CreateUserForm() {
                                     <FormControl>
                                         <Input placeholder="山田 太郎" className="bg-slate-900/50 border-slate-700 text-white" {...field} />
                                     </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="department"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-white">所属部 (任意)</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white">
+                                                <SelectValue placeholder="所属部を選択" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                                            {DEPARTMENTS.map((dept) => (
+                                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}

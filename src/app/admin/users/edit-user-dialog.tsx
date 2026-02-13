@@ -25,6 +25,16 @@ import { Edit, Loader2, Trash2 } from 'lucide-react';
 import type { User, UserRole, TargetExamType } from '@/types/database';
 import { updateUser, deleteUser } from '@/app/admin/users/actions';
 
+const DEPARTMENTS = [
+    '第一技術部',
+    '第二技術部',
+    '第三技術部',
+    '第四技術部',
+    '第五技術部',
+    '第六技術部',
+    'その他',
+] as const;
+
 interface EditUserDialogProps {
     user: User;
 }
@@ -37,6 +47,7 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
         displayName: user.display_name || '',
         role: user.role,
         targetExam: user.target_exam || 'ENCOR',
+        department: user.department || '',
     });
 
     // Auto-select exam type based on role
@@ -75,6 +86,7 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
                 displayName: formData.displayName,
                 role: formData.role as UserRole,
                 targetExam: formData.targetExam as TargetExamType,
+                department: formData.department || undefined,
             });
 
             if (result.error) {
@@ -148,6 +160,23 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
                                 <SelectItem value="ENCOR">Core ENCOR</SelectItem>
                                 <SelectItem value="ENARSI">Conce ENARSI</SelectItem>
                                 <SelectItem value="BOTH">Core ENCOR & Conce ENARSI</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="department">所属部</Label>
+                        <Select
+                            value={formData.department}
+                            onValueChange={(value) => setFormData({ ...formData, department: value })}
+                        >
+                            <SelectTrigger className="bg-slate-900 border-slate-600 text-white">
+                                <SelectValue placeholder="所属部を選択" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                                {DEPARTMENTS.map((dept) => (
+                                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

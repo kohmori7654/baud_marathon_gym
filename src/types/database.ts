@@ -21,6 +21,8 @@ export interface User {
   role: UserRole;
   target_exam: TargetExamType | null;
   display_name: string | null;
+  department?: string | null;
+  passed?: boolean;
   created_at: string;
   updated_at: string;
 }

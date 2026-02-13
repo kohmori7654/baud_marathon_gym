@@ -64,6 +64,69 @@ export async function getAssignments() {
     return data as SupporterAssignment[];
 }
 
+export interface SupporterStats {
+    id: string;
+    display_name: string | null;
+    email: string;
+    department: string | null;
+    examinees: { id: string; display_name: string | null; email: string; passed: boolean }[];
+    examinee_count: number;
+    passed_count: number;
+}
+
+/**
+ * Get supporter stats with examinee details for table view
+ */
+export async function getSupporterStats(): Promise<SupporterStats[]> {
+    const supabase = createAdminClient();
+
+    // Get all supporters
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: supporters } = await (supabase.from('users') as any)
+        .select('id, display_name, email, department')
+        .eq('role', 'supporter')
+        .order('display_name');
+
+    // Get all assignments
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: assignments } = await (supabase.from('supporter_assignments') as any)
+        .select('supporter_id, examinee_id');
+
+    // Get all examinees with passed status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: allExaminees } = await (supabase.from('users') as any)
+        .select('id, display_name, email, passed')
+        .eq('role', 'examinee');
+
+    const examineeMap: Record<string, { id: string; display_name: string | null; email: string; passed: boolean }> = {};
+    for (const e of (allExaminees || [])) {
+        examineeMap[e.id] = { id: e.id, display_name: e.display_name, email: e.email, passed: e.passed || false };
+    }
+
+    // Group assignments by supporter
+    const assignmentsBySupporter: Record<string, string[]> = {};
+    for (const a of (assignments || [])) {
+        if (!assignmentsBySupporter[a.supporter_id]) assignmentsBySupporter[a.supporter_id] = [];
+        assignmentsBySupporter[a.supporter_id].push(a.examinee_id);
+    }
+
+    return (supporters || []).map((s: any) => {
+        const examineeIds = assignmentsBySupporter[s.id] || [];
+        const examinees = examineeIds
+            .map((id: string) => examineeMap[id])
+            .filter(Boolean);
+        return {
+            id: s.id,
+            display_name: s.display_name,
+            email: s.email,
+            department: s.department,
+            examinees,
+            examinee_count: examinees.length,
+            passed_count: examinees.filter((e: any) => e.passed).length,
+        };
+    });
+}
+
 /**
  * Assign an examinee to a supporter
  */
