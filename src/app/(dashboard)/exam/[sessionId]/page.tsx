@@ -50,7 +50,6 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [simulationFrameExpanded, setSimulationFrameExpanded] = useState(false);
 
-    const SIMULATION_IFRAME_URL = 'https://baudroie-virtual-campus.web.app/';
 
     // Resolve params
     useEffect(() => {
@@ -148,6 +147,8 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
     }, [sessionId, router]);
 
     const currentQuestion = questions[currentIndex];
+    const DEFAULT_SIMULATION_URL = 'https://baudroie-virtual-campus.web.app/';
+    const simulationIframeUrl = (currentQuestion as any)?.simulation_url || DEFAULT_SIMULATION_URL;
     const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
     const answeredCount = answeredQuestions.length;
     const correctCount = answeredQuestions.filter(a => a.isCorrect).length;
@@ -382,7 +383,7 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <iframe
-                                                src={SIMULATION_IFRAME_URL}
+                                                src={simulationIframeUrl}
                                                 title="Baudroie Virtual Campus"
                                                 className="w-[90vw] h-[90vh] rounded-lg border border-slate-600"
                                             />
@@ -391,7 +392,7 @@ export default function ExamSessionPage({ params }: ExamSessionPageProps) {
                                 )}
                                 {!simulationFrameExpanded && (
                                     <iframe
-                                        src={SIMULATION_IFRAME_URL}
+                                        src={simulationIframeUrl}
                                         title="Baudroie Virtual Campus"
                                         className="w-full h-[400px] border-0"
                                     />

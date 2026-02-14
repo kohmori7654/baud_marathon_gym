@@ -33,6 +33,7 @@ const questionSchema = z.object({
     questionType: z.enum(['Single', 'Multi', 'DragDrop', 'Simulation']),
     explanation: z.string().optional(),
     simulationTargetJson: z.string().optional(),
+    simulationUrl: z.string().optional(),
     images: z.array(z.string()).optional(),
     options: z.array(z.object({
         text: z.string().min(1, '選択肢を入力してください'),
@@ -82,6 +83,7 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ? JSON.stringify(initialData.simulation_target_json, null, 2)
                 : '',
+            simulationUrl: (initialData as any)?.simulation_url || '',
             images: initialData?.question_images?.map(img => img.image_data) || (initialData?.image_base64 ? [initialData.image_base64] : []),
             options: initialData?.options?.map(o => ({
                 text: o.text,
@@ -163,6 +165,7 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
                 images: previewImages,
                 imageBase64: previewImages.length > 0 ? previewImages[0] : undefined, // Fallback for backward compatibility
                 simulationTargetJson: simulationJson,
+                simulationUrl: data.simulationUrl || undefined,
                 options: data.options.map((o, i) => ({
                     ...o,
                     sortOrder: i + 1, // Ensure sequential order
@@ -334,7 +337,16 @@ export function QuestionForm({ initialData }: QuestionFormProps) {
                                 シミュレーション定義 (JSON)
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-slate-200">シミュレーション環境 URL（任意）</Label>
+                                <Input
+                                    {...register('simulationUrl')}
+                                    placeholder="https://baudroie-virtual-campus.web.app/"
+                                    className="bg-slate-900 border-slate-600 text-white font-mono text-sm"
+                                />
+                                <p className="text-xs text-slate-500">未入力の場合はデフォルトURL（baudroie-virtual-campus.web.app）が使用されます</p>
+                            </div>
                             <Textarea
                                 {...register('simulationTargetJson')}
                                 placeholder='{ "version": "1.0", "devices": [...], ... }'

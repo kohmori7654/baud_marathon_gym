@@ -44,6 +44,7 @@ export interface Question {
   image_base64?: string; // Legacy/Single image support
   question_images?: QuestionImage[]; // New support for multiple images
   simulation_target_json?: Record<string, unknown>; // JSON for simulation matching
+  simulation_url?: string; // Custom URL for simulation iframe
   hash: string;
   display_id?: number; // Added: Sequential ID for display
   created_at?: string;

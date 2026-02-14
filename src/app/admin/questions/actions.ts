@@ -14,6 +14,7 @@ export interface CreateQuestionData {
     imageBase64?: string; // Legacy: Maps to first image
     images?: string[];    // New: Multiple images
     simulationTargetJson?: Record<string, unknown>;
+    simulationUrl?: string;
     options: {
         text: string;
         isCorrect: boolean;
@@ -268,6 +269,7 @@ export async function createQuestion(data: CreateQuestionData) {
         explanation: data.explanation || null,
         image_base64: imagesToSave.length > 0 ? imagesToSave[0] : null, // Legacy backward compatibility
         simulation_target_json: data.simulationTargetJson || null,
+        simulation_url: data.simulationUrl || null,
         hash: hash,
         display_id: nextDisplayId,
         is_important: data.isImportant || false,
@@ -344,6 +346,7 @@ export async function updateQuestion(data: UpdateQuestionData) {
     if (data.questionType) questionUpdate.question_type = data.questionType;
     if (data.explanation !== undefined) questionUpdate.explanation = data.explanation;
     if (data.simulationTargetJson !== undefined) questionUpdate.simulation_target_json = data.simulationTargetJson;
+    if (data.simulationUrl !== undefined) questionUpdate.simulation_url = data.simulationUrl || null;
     if (data.isImportant !== undefined) questionUpdate.is_important = data.isImportant;
 
     // Legacy image update if explicitly provided, or update it if images array is provided
